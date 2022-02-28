@@ -145,47 +145,43 @@ function patternToBase3(pattern: PatternArray) {
 }
 
 export function withScore(possibleWords = WORDLIST.Dictionnaire) {
-    console.log(possibleWords)
   const obj: Record<string, any> = {};
   //const patterns = getAllPatterns(size);
   const nbOfWords = possibleWords.length;
 
-  for (const source of possibleWords) {
-    // the possible patterns of this word with nb of occurences
-    obj[source] = {};
-    for (const target of possibleWords) {
-      const pattern = getPattern(source, target);
-      const toBase3 = patternToBase3(pattern);
-      if (obj[source][toBase3] !== undefined) {
-        obj[source][toBase3] += 1;
-      } else {
-        obj[source][toBase3] = 1;
+  const promises = possibleWords.map(
+    (source) =>
+      new Promise<void>((resolve) => {
+        obj[source] = {};
+        for (const target of possibleWords) {
+          const pattern = getPattern(source, target);
+          const toBase3 = patternToBase3(pattern);
+          if (obj[source][toBase3] !== undefined) {
+            obj[source][toBase3] += 1;
+          } else {
+            obj[source][toBase3] = 1;
+          }
+        }
+        resolve();
+      })
+  );
+
+  return Promise.all(promises).then(() => {
+    const result: any = {};
+    Object.entries(obj).forEach(([k, v]) => {
+      let sum = 0;
+      for (const val of Object.values(v)) {
+        const px = (val as number) / nbOfWords;
+        sum += px * Math.log2(1 / px);
       }
-    }
-  }
-  /*
-  Object.values(obj).forEach((v) => {
-    let sum = 0;
-    for (const val of Object.values(v)) {
-        sum += val as number;
-    }
-    console.log(sum)
-  })
-  */
+      result[k] = sum;
+    });
 
-  const result: any = {};
-  Object.entries(obj).forEach(([k, v]) => {
-    let sum = 0;
-    for (const val of Object.values(v)) {
-      const px = (val as number) / nbOfWords;
-      sum += px * Math.log2(1 / px);
-    }
-    result[k] = sum;
-  });
+    const inOrder = Object.entries(result).sort(function (a: any, b: any) {
+      return b[1] - a[1];
+    });
 
-  const inOrder = Object.entries(result).sort(function (a: any, b: any) {
-    return b[1] - a[1];
+    return inOrder;
   });
-  return inOrder;
 }
 //console.log(withScore( WORDLIST.Dictionnaire.filter(m => m.startsWith("A") && m.length === 6)))

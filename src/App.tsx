@@ -120,30 +120,14 @@ type CellProps = {
 export default function App() {
   const [patterns, setPatterns] = useState<PatternArray>([]);
   const [currentAttempt, setCurrentAttempt] = useState("");
-  const [firstLetter, setFirstLetter] = useState("");
-  const [possibleWords, setPossibleWords] = useState<Array<[string, unknown]>>([]);
+  const [possibleWords, setPossibleWords] = useState<Array<[string, unknown]>>(
+    []
+  );
   const [length, setLength] = useState([0, 0, 0, 0, 0, 0]);
   const [history, setHistory] = useState<Array<any>>([]);
-  const possiblesWordsOnly = possibleWords.map(([k,]) => k);
+  const possiblesWordsOnly = possibleWords.map(([k]) => k);
 
-  useEffect(() => {
-    if (history.length > 0 || currentAttempt.length > 1) {
-      return;
-    }
-    setFirstLetter(currentAttempt[0]);
-  }, [currentAttempt, history]);
-
-
-  useEffect(() => {
-    if(firstLetter) {
-      const upL = firstLetter.toUpperCase();
-      const possibilitiesWithScore = withScore( WORDLIST.Dictionnaire.filter(m => m.startsWith(upL) && m.length === length.length));
-      setPossibleWords(possibilitiesWithScore);
-    }
-  }, [firstLetter, length])
-
-
-  function check() {
+  async function check() {
     if (currentAttempt.length < 5 || patterns.length < length.length) {
       return;
     }
@@ -152,11 +136,11 @@ export default function App() {
       patterns,
       possiblesWordsOnly
     );
-    const possibilitiesWithScore = withScore(possibilities);
+    const possibilitiesWithScore = await withScore(possibilities);
     setPossibleWords(possibilitiesWithScore);
   }
 
-  function handleKey(key: string) {
+  async function handleKey(key: string) {
     let letter = key.toLowerCase();
     if (letter === "enter") {
       if (currentAttempt.length < 5 || patterns.length < length.length) {
@@ -192,6 +176,15 @@ export default function App() {
       setLength((prev) => prev.slice(0, -1));
     } else if (/^[a-z]$/.test(letter)) {
       if (currentAttempt.length < length.length) {
+        if (currentAttempt.length === 0 && history.length === 0) {
+          const possibilitiesWithScore = await withScore(
+            WORDLIST.Dictionnaire.filter(
+              (m) =>
+                m.startsWith(letter.toUpperCase()) && m.length === length.length
+            )
+          );
+          setPossibleWords(possibilitiesWithScore);
+        }
         setCurrentAttempt(currentAttempt + letter);
       } else {
         if (patterns.length < length.length) {
