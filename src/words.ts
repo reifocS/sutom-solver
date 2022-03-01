@@ -144,44 +144,55 @@ function patternToBase3(pattern: PatternArray) {
   return result;
 }
 
-export function withScore(possibleWords = WORDLIST.Dictionnaire) {
+const cache: Record<string, [string, unknown][]> = {};
+
+export function withScore(possibleWords = WORDLIST.Dictionnaire, key?: string) {
+  if (key && cache[key]) {
+    return cache[key];
+  }
   const obj: Record<string, any> = {};
   //const patterns = getAllPatterns(size);
   const nbOfWords = possibleWords.length;
 
-  const promises = possibleWords.map(
-    (source) =>
-      new Promise<void>((resolve) => {
-        obj[source] = {};
-        for (const target of possibleWords) {
-          const pattern = getPattern(source, target);
-          const toBase3 = patternToBase3(pattern);
-          if (obj[source][toBase3] !== undefined) {
-            obj[source][toBase3] += 1;
-          } else {
-            obj[source][toBase3] = 1;
-          }
-        }
-        resolve();
-      })
-  );
-
-  return Promise.all(promises).then(() => {
-    const result: any = {};
-    Object.entries(obj).forEach(([k, v]) => {
-      let sum = 0;
-      for (const val of Object.values(v)) {
-        const px = (val as number) / nbOfWords;
-        sum += px * Math.log2(1 / px);
+  for (const source of possibleWords) {
+    // the possible patterns of this word with nb of occurences
+    obj[source] = {};
+    for (const target of possibleWords) {
+      const pattern = getPattern(source, target);
+      const toBase3 = patternToBase3(pattern);
+      if (obj[source][toBase3] !== undefined) {
+        obj[source][toBase3] += 1;
+      } else {
+        obj[source][toBase3] = 1;
       }
-      result[k] = sum;
-    });
+    }
+  }
 
-    const inOrder = Object.entries(result).sort(function (a: any, b: any) {
-      return b[1] - a[1];
-    });
-
-    return inOrder;
+  const result: any = {};
+  Object.entries(obj).forEach(([k, v]) => {
+    let sum = 0;
+    for (const val of Object.values(v)) {
+      const px = (val as number) / nbOfWords;
+      sum += px * Math.log2(1 / px);
+    }
+    result[k] = sum;
   });
+
+  const inOrder = Object.entries(result).sort(function (a: any, b: any) {
+    return b[1] - a[1];
+  });
+
+  if (key) {
+    cache[key] = inOrder;
+  }
+  return inOrder;
 }
 //console.log(withScore( WORDLIST.Dictionnaire.filter(m => m.startsWith("A") && m.length === 6)))
+//TODO Precompute all patterns;
+var startTime = performance.now()
+
+withScore( WORDLIST.Dictionnaire.filter(m => m.startsWith("A") && m.length === 6))    
+
+var endTime = performance.now()
+
+console.log(`Call to withScore took ${endTime - startTime} milliseconds`)

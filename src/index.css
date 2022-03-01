@@ -5,6 +5,8 @@ html {
 
 .App {
   text-align: center;
+  justify-content: center;
+  display: flex;
 }
 
 .List {
@@ -50,4 +52,27 @@ html {
 .keyboard button {
   padding: 10px;
   margin-top: 6px;
+}
+
+
+.openers {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.openers button {
+  border: none;
+  padding: 10px 22px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.openers div:nth-child(2) {
+  display: flex;
+  margin-bottom: 16px;
+  gap: 10px;
 }
