@@ -269,7 +269,9 @@ export async function withScoreNonBlocking(
   return inOrder;
 }
 */
-function processLargeArrayAsyncAndUpdate(
+
+// Separate the big work into async smaller works, so the main thread is not blocked.
+function processWithoutBlockingAndUpdateUI(
   array: Array<any>,
   fn: (source: string, index: number) => void,
   obj: Array<[string, number]>,
@@ -294,6 +296,10 @@ function processLargeArrayAsyncAndUpdate(
   doChunk();
 }
 
+// O(log(n)
+// binary search and splice seems to be the fastest implementation possible,
+// another solution would be to use a btree instead of an array
+// we profit from the fact that the given array is sorted since we built it from scratch
 function sortedIndex(array: Array<[string, number]>, value: [string, number]) {
   let low = 0;
   let high = array.length;
@@ -317,8 +323,10 @@ export async function withScoreNonBlockingUpdatingAsGoing(
 ) {
   const wordsWithScore: Array<[string, number]> = [];
   const length = possibleWords.length;
+
   // Gets called for each word, we will then compare this word agaisnt every other word
   // so it's quite heavy O(n^2) where n is the length of possible words.
+
   function updater(source: string, index: number) {
     const patterns: Record<string, number> = {};
 
@@ -335,6 +343,8 @@ export async function withScoreNonBlockingUpdatingAsGoing(
       }
     }
     let sum = 0;
+
+    // TODO optimize this iteration, maybe we can remove it.
     for (const val of Object.values(patterns)) {
       const px = val / length;
       sum += px * Math.log2(1 / px);
@@ -342,7 +352,7 @@ export async function withScoreNonBlockingUpdatingAsGoing(
     insert(wordsWithScore, [source, sum]);
   }
 
-  processLargeArrayAsyncAndUpdate(
+  processWithoutBlockingAndUpdateUI(
     possibleWords,
     updater,
     wordsWithScore,
