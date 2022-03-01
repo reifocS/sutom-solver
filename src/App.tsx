@@ -6,9 +6,7 @@ import {
   getPossibleWords,
   PatternArray,
   withScore,
-  withScoreNonBlocking,
   withScoreNonBlockingUpdatingAsGoing,
-  withScorePromise,
 } from "./words";
 
 const colorMap = {

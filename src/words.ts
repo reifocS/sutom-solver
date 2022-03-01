@@ -196,7 +196,7 @@ export const withScorePromise = (
   new Promise<[string, unknown][]>((resolve) =>
     setTimeout(() => resolve(withScore(possibleWords, key)), 1)
   );
-
+/*
 function processLargeArrayAsync(
   array: Array<any>,
   fn: any,
@@ -219,7 +219,8 @@ function processLargeArrayAsync(
   }
   doChunk();
 }
-
+*/
+/*
 export async function withScoreNonBlocking(
   possibleWords = WORDLIST.Dictionnaire,
   key?: string
@@ -266,7 +267,7 @@ export async function withScoreNonBlocking(
   }
   return inOrder;
 }
-
+*/
 function processLargeArrayAsyncAndUpdate(
   array: Array<any>,
   fn: any,
