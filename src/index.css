@@ -54,7 +54,6 @@ html {
   margin-top: 6px;
 }
 
-
 .openers {
   display: flex;
   flex-direction: column;
@@ -75,4 +74,12 @@ html {
   display: flex;
   margin-bottom: 16px;
   gap: 10px;
+}
+
+.progressbar {
+  display: flex;
+  align-items: start;
+  font-size: 0.9rem;
+  background-color: lightgray;
+  font-weight: bold;
 }

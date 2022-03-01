@@ -16,6 +16,32 @@ const colorMap = {
   [-1]: "",
 };
 
+type ProgressBarProps = {
+  actual: string;
+};
+function inPercent(prog: string) {
+  if (!prog) return 0;
+  let [curr, max] = prog.split("/");
+  let actual = Number(curr);
+  let maxi = Number(max);
+  return (maxi - (maxi - actual)) / maxi;
+}
+
+function ProgressBar(props: ProgressBarProps) {
+  const { actual } = props;
+  const percent = inPercent(actual);
+  const maxHashtag = 50;
+  const currHashtag = Math.floor(maxHashtag * percent);
+  const progress = [];
+  for (let i = 0; i < maxHashtag; ++i) {
+    if (i < currHashtag) progress.push(<span key={i}>#</span>);
+    else {
+      progress.push(<span key={i} style={{ visibility: "hidden" }}>#</span>);
+    }
+  }
+  return <div className="progressbar"><b>[</b>{progress}<b>]</b></div>;
+}
+
 type RowProps = {
   word: string;
   length: Array<any>;
@@ -390,7 +416,12 @@ export default function App() {
             </button>
           </form>
         </div>
-        {loading && <p>{loading}</p>}
+        {loading && (
+          <div>
+            <ProgressBar actual={loading} />
+            {loading}
+          </div>
+        )}
         <List
           height={400}
           className="List"
