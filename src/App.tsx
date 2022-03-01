@@ -138,7 +138,7 @@ export default function App() {
 
   function check() {
     if (currentAttempt.length < 5 || patterns.length < length.length) {
-      return;
+      throw new Error("How?");
     }
     let possibles = possibleWords.map(([k]) => k);
     // first guess
@@ -156,6 +156,16 @@ export default function App() {
     );
     const possibilitiesWithScore = withScore(possibilities);
     setPossibleWords(possibilitiesWithScore);
+    let newHistory = [
+      ...history,
+      {
+        currentAttempt,
+        patterns,
+      },
+    ];
+    setHistory(newHistory);
+    setCurrentAttempt("");
+    setPatterns([]);
   }
 
   async function bestFirstGuess(letter: string, length: number) {
@@ -176,18 +186,7 @@ export default function App() {
       if (currentAttempt.length < 5 || patterns.length < length.length) {
         return;
       }
-
-      let newHistory = [
-        ...history,
-        {
-          currentAttempt,
-          patterns,
-        },
-      ];
       check();
-      setHistory(newHistory);
-      setCurrentAttempt("");
-      setPatterns([]);
     } else if (letter === "backspace") {
       if (patterns.length > 0) {
         setPatterns(patterns.slice(0, patterns.length - 1));
@@ -284,7 +283,16 @@ export default function App() {
           >
             - letter
           </button>
-          <button onClick={() => check()}>check</button>
+          <button
+            disabled={
+              currentAttempt.length < 5 || patterns.length < length.length
+            }
+            onClick={() => {
+              check();
+            }}
+          >
+            check
+          </button>
           <button
             onClick={() => {
               setHistory([]);
