@@ -29,17 +29,9 @@ function inPercent(prog: string) {
 
 function ProgressBar(props: ProgressBarProps) {
   const { actual } = props;
-  const percent = inPercent(actual);
-  const maxHashtag = 50;
-  const currHashtag = Math.floor(maxHashtag * percent);
-  const progress = [];
-  for (let i = 0; i < maxHashtag; ++i) {
-    if (i < currHashtag) progress.push(<span key={i}>#</span>);
-    else {
-      progress.push(<span key={i} style={{ visibility: "hidden" }}>#</span>);
-    }
-  }
-  return <div className="progressbar"><b>[</b>{progress}<b>]</b></div>;
+  const percent = inPercent(actual) * 100;
+  return <progress value={percent.toString()} max="100"/>
+  ;
 }
 
 type RowProps = {
@@ -417,7 +409,7 @@ export default function App() {
           </form>
         </div>
         {loading && (
-          <div>
+          <div className="progressbar">
             <ProgressBar actual={loading} />
             {loading}
           </div>
