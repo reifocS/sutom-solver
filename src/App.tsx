@@ -2,7 +2,14 @@ import React, { useState, useEffect } from "react";
 import WORDLIST from "./wordlist";
 import { FixedSizeList as List } from "react-window";
 
-import { getPossibleWords, PatternArray, withScore } from "./words";
+import {
+  getPossibleWords,
+  PatternArray,
+  withScore,
+  withScoreNonBlocking,
+  withScoreNonBlockingUpdatingAsGoing,
+  withScorePromise,
+} from "./words";
 
 const colorMap = {
   0: "#0077C7",
@@ -127,6 +134,7 @@ export default function App() {
   const [history, setHistory] = useState<Array<any>>([]);
   const [firstLetter, setFirstLetter] = useState("");
   const [openerLength, setOpenerLength] = useState(6);
+  const [loading, setLoading] = useState("");
 
   const [openers, setOpeners] = useState<Array<[string, unknown]>>([]);
   const possiblesWordsOnly = possibleWords.map(([k]) => k);
@@ -153,14 +161,29 @@ export default function App() {
     setPossibleWords(possibilitiesWithScore);
   }
 
-  function bestFirstGuess(letter: string, length: number) {
-    const possibilitiesWithScore = withScore(
+  async function bestFirstGuess(letter: string, length: number) {
+    /*const possibilitiesWithScore = await withScoreNonBlocking(
       WORDLIST.Dictionnaire.filter(
         (m) => m.startsWith(letter.toUpperCase()) && m.length === length
       ),
       letter.toUpperCase() + "-" + length
-    );
+        if (!possibilitiesWithScore) throw new Error("undefined");
+    setLoading(false);
     setOpeners(possibilitiesWithScore);
+    );*/
+    withScoreNonBlockingUpdatingAsGoing(
+      setOpeners,
+      WORDLIST.Dictionnaire.filter(
+        (m) => m.startsWith(letter.toUpperCase()) && m.length === length
+      ),
+      (status: string) => setLoading(status)
+    );
+    /*const possibilitiesWithScore = await withScorePromise(
+      WORDLIST.Dictionnaire.filter(
+        (m) => m.startsWith(letter.toUpperCase()) && m.length === length
+      ),
+      letter.toUpperCase() + "-" + length
+    );*/
   }
 
   async function handleKey(key: string) {
@@ -199,11 +222,6 @@ export default function App() {
       setLength((prev) => prev.slice(0, -1));
     } else if (/^[a-z]$/.test(letter)) {
       if (currentAttempt.length < length.length) {
-        /*
-        if (currentAttempt.length === 0 && history.length === 0) {
-          bestFirstGuess(letter, length.length);
-        }
-        */
         setCurrentAttempt(currentAttempt + letter);
       } else {
         if (patterns.length < length.length) {
@@ -253,22 +271,17 @@ export default function App() {
       {`${openers[index]}`}
     </div>
   );
+
   return (
     <div className="App">
       <div>
         <h1>SUTOM helper</h1>
         <p>Assistance to solve the french version of wordle</p>
-        <p>Type the first letter to see best opener</p>
         <div className="controls">
           <button
             disabled={history.length > 0 || length.length === 9}
             onClick={() => {
               setLength((prev) => [...prev, 0]);
-              /*
-            if (currentAttempt.length === 1 && history.length === 0) {
-              bestFirstGuess(currentAttempt[0], length.length + 1);
-            }
-            */
             }}
           >
             + letter
@@ -283,11 +296,6 @@ export default function App() {
                 setPatterns((prev) => prev.slice(0, -1));
               }
               setLength((prev) => prev.slice(0, -1));
-              /*
-            if (currentAttempt.length === 1 && history.length === 0) {
-              bestFirstGuess(currentAttempt[0], length.length - 1);
-            }
-            */
             }}
           >
             - letter
@@ -333,7 +341,7 @@ export default function App() {
           </small>
           <p>Possible words:</p>
           <List
-            height={200}
+            height={400}
             className="List"
             itemCount={possiblesWordsOnly.length}
             itemSize={35}
@@ -349,12 +357,11 @@ export default function App() {
         <div>
           <input
             onChange={(e) => {
-              if (e.target.value) {
-                setFirstLetter(e.target.value);
-              }
+              setFirstLetter(e.target.value);
             }}
             type="text"
             name="first letter"
+            autoComplete="off"
             value={firstLetter}
             maxLength={1}
             pattern="[A-Za-z]"
@@ -362,18 +369,17 @@ export default function App() {
           />
           <input
             onChange={(e) => {
-              if (e.target.value) {
-                setOpenerLength(+e.target.value);
-              }
+              setOpenerLength(+e.target.value);
             }}
             type="number"
             name="lenght"
             value={openerLength}
-            min={6}
-            max={9}
             title="Number of letters of the word to guess"
           />
           <button
+            disabled={
+              loading !== "" && loading.split("/")[0] !== loading.split("/")[1]
+            }
             onClick={() => {
               if (firstLetter && openerLength) {
                 bestFirstGuess(firstLetter, openerLength);
@@ -383,8 +389,9 @@ export default function App() {
             Find openers
           </button>
         </div>
+        {loading && <p>{loading}</p>}
         <List
-          height={200}
+          height={400}
           className="List"
           itemCount={openers.length}
           itemSize={35}

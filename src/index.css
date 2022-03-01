@@ -5,7 +5,7 @@ html {
 
 .App {
   text-align: center;
-  justify-content: center;
+  justify-content: space-evenly;
   display: flex;
 }
 

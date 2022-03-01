@@ -147,6 +147,7 @@ function patternToBase3(pattern: PatternArray) {
 const cache: Record<string, [string, unknown][]> = {};
 
 export function withScore(possibleWords = WORDLIST.Dictionnaire, key?: string) {
+  console.log(possibleWords.length);
   if (key && cache[key]) {
     return cache[key];
   }
@@ -187,12 +188,176 @@ export function withScore(possibleWords = WORDLIST.Dictionnaire, key?: string) {
   }
   return inOrder;
 }
-//console.log(withScore( WORDLIST.Dictionnaire.filter(m => m.startsWith("A") && m.length === 6)))
-//TODO Precompute all patterns;
-var startTime = performance.now()
 
-withScore( WORDLIST.Dictionnaire.filter(m => m.startsWith("A") && m.length === 6))    
+export const withScorePromise = (
+  possibleWords = WORDLIST.Dictionnaire,
+  key?: string
+) =>
+  new Promise<[string, unknown][]>((resolve) =>
+    setTimeout(() => resolve(withScore(possibleWords, key)), 1)
+  );
 
-var endTime = performance.now()
+function processLargeArrayAsync(
+  array: Array<any>,
+  fn: any,
+  resolve: (value: unknown) => void,
+  chunk = 50
+) {
+  let index = 0;
+  function doChunk() {
+    let cnt = chunk;
+    while (cnt-- && index < array.length) {
+      fn(array[index], index, array);
+      ++index;
+    }
+    if (index < array.length) {
+      setTimeout(doChunk, 1);
+    }
+    if (index === array.length) {
+      resolve(1);
+    }
+  }
+  doChunk();
+}
 
-console.log(`Call to withScore took ${endTime - startTime} milliseconds`)
+export async function withScoreNonBlocking(
+  possibleWords = WORDLIST.Dictionnaire,
+  key?: string
+) {
+  const obj: Record<string, any> = {};
+  const nbOfWords = possibleWords.length;
+
+  const promise = new Promise(function (resolve) {
+    processLargeArrayAsync(
+      possibleWords,
+      (source: string, _: number, array: string[]) => {
+        // the possible patterns of this word with nb of occurences
+        obj[source] = {};
+        for (const target of array) {
+          const pattern = getPattern(source, target);
+          const toBase3 = patternToBase3(pattern);
+          if (obj[source][toBase3] !== undefined) {
+            obj[source][toBase3] += 1;
+          } else {
+            obj[source][toBase3] = 1;
+          }
+        }
+      },
+      resolve
+    );
+  });
+  await promise;
+  const result: any = {};
+  Object.entries(obj).forEach(([k, v]) => {
+    let sum = 0;
+    for (const val of Object.values(v)) {
+      const px = (val as number) / nbOfWords;
+      sum += px * Math.log2(1 / px);
+    }
+    result[k] = sum;
+  });
+
+  const inOrder = Object.entries(result).sort(function (a: any, b: any) {
+    return b[1] - a[1];
+  });
+
+  if (key) {
+    cache[key] = inOrder;
+  }
+  return inOrder;
+}
+
+function processLargeArrayAsyncAndUpdate(
+  array: Array<any>,
+  fn: any,
+  obj: Record<string, any>,
+  setState: (value: any) => void,
+  maxTimePerChunk = 400
+) {
+  function now() {
+    return new Date().getTime();
+  }
+  let index = 0;
+  function doChunk() {
+    let startTime = now();
+    while (index < array.length && now() - startTime <= maxTimePerChunk) {
+      fn(array[index], index, array);
+      ++index;
+    }
+    if (index < array.length) {
+      setTimeout(doChunk, 1);
+    }
+    const result: any = {};
+    Object.entries(obj).forEach(([k, v]) => {
+      let sum = 0;
+      for (const val of Object.values(v)) {
+        const px = (val as number) / array.length;
+        sum += px * Math.log2(1 / px);
+      }
+      result[k] = sum;
+    });
+
+    const inOrder = Object.entries(result).sort(function (a: any, b: any) {
+      return b[1] - a[1];
+    });
+    setState(inOrder);
+  }
+  doChunk();
+}
+
+export async function withScoreNonBlockingUpdatingAsGoing(
+  setState: any,
+  possibleWords = WORDLIST.Dictionnaire,
+  displayStatus: (status: string) => void,
+  key?: string
+) {
+  const obj: Record<string, any> = {};
+
+  processLargeArrayAsyncAndUpdate(
+    possibleWords,
+    (source: string, index: number, array: string[]) => {
+      obj[source] = {};
+      displayStatus(`${index + 1}/${array.length}`);
+
+      for (const target of array) {
+        const pattern = getPattern(source, target);
+        const toBase3 = patternToBase3(pattern);
+        if (obj[source][toBase3] !== undefined) {
+          obj[source][toBase3] += 1;
+        } else {
+          obj[source][toBase3] = 1;
+        }
+      }
+    },
+    obj,
+    setState
+  );
+}
+
+/*
+async function benchMark() {
+  let startTime, endTime;
+
+  startTime = performance.now();
+
+  await withScoreNonBlocking(
+    WORDLIST.Dictionnaire.filter((m) => m.startsWith("A") && m.length === 6)
+  );
+
+  endTime = performance.now();
+
+  console.log(
+    `Call to withScoreNonBlocking took ${endTime - startTime} milliseconds`
+  );
+
+  startTime = performance.now();
+
+  withScore(
+    WORDLIST.Dictionnaire.filter((m) => m.startsWith("A") && m.length === 6)
+  );
+
+  endTime = performance.now();
+
+  console.log(`Call to withScore took ${endTime - startTime} milliseconds`);
+}
+*/
