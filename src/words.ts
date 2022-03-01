@@ -77,6 +77,7 @@ export function getPossibleWords(
   patterns: PatternArray,
   possibles: Array<string>
 ) {
+  console.log("possibleWord");
   let poss: Array<string> = [];
   possibles.forEach((word) => {
     if (checkConformity(source, word, patterns)) poss.push(word);
@@ -270,10 +271,10 @@ export async function withScoreNonBlocking(
 */
 function processLargeArrayAsyncAndUpdate(
   array: Array<any>,
-  fn: any,
-  obj: Record<string, any>,
+  fn: (source: string, index: number) => void,
+  obj: Array<[string, number]>,
   setState: (value: any) => void,
-  maxTimePerChunk = 400
+  maxTimePerChunk = 300
 ) {
   function now() {
     return new Date().getTime();
@@ -282,55 +283,69 @@ function processLargeArrayAsyncAndUpdate(
   function doChunk() {
     let startTime = now();
     while (index < array.length && now() - startTime <= maxTimePerChunk) {
-      fn(array[index], index, array);
+      fn(array[index], index);
       ++index;
     }
     if (index < array.length) {
       setTimeout(doChunk, 1);
     }
-    const result: any = {};
-    Object.entries(obj).forEach(([k, v]) => {
-      let sum = 0;
-      for (const val of Object.values(v)) {
-        const px = (val as number) / array.length;
-        sum += px * Math.log2(1 / px);
-      }
-      result[k] = sum;
-    });
-
-    const inOrder = Object.entries(result).sort(function (a: any, b: any) {
-      return b[1] - a[1];
-    });
-    setState(inOrder);
+    setState(obj);
   }
   doChunk();
 }
 
+function sortedIndex(array: Array<[string, number]>, value: [string, number]) {
+  let low = 0;
+  let high = array.length;
+
+  while (low < high) {
+    let mid = (low + high) >>> 1;
+    if (array[mid][1] > value[1]) low = mid + 1;
+    else high = mid;
+  }
+  return low;
+}
+function insert(array: Array<[string, number]>, value: [string, number]) {
+  const index = sortedIndex(array, value);
+  array.splice(index, 0, value);
+}
+
 export async function withScoreNonBlockingUpdatingAsGoing(
-  setState: any,
+  setState: React.Dispatch<React.SetStateAction<[string, unknown][]>>,
   possibleWords = WORDLIST.Dictionnaire,
-  displayStatus: (status: string) => void,
-  key?: string
+  displayStatus: (status: string) => void
 ) {
-  const obj: Record<string, any> = {};
+  const wordsWithScore: Array<[string, number]> = [];
+  const length = possibleWords.length;
+  // Gets called for each word, we will then compare this word agaisnt every other word
+  // so it's quite heavy O(n^2) where n is the length of possible words.
+  function updater(source: string, index: number) {
+    const patterns: Record<string, number> = {};
+
+    // Update UI to show progess
+    displayStatus(`${index + 1}/${length}`);
+
+    for (const target of possibleWords) {
+      const pattern = getPattern(source, target);
+      const toBase3 = patternToBase3(pattern);
+      if (patterns[toBase3] !== undefined) {
+        patterns[toBase3] += 1;
+      } else {
+        patterns[toBase3] = 1;
+      }
+    }
+    let sum = 0;
+    for (const val of Object.values(patterns)) {
+      const px = val / length;
+      sum += px * Math.log2(1 / px);
+    }
+    insert(wordsWithScore, [source, sum]);
+  }
 
   processLargeArrayAsyncAndUpdate(
     possibleWords,
-    (source: string, index: number, array: string[]) => {
-      obj[source] = {};
-      displayStatus(`${index + 1}/${array.length}`);
-
-      for (const target of array) {
-        const pattern = getPattern(source, target);
-        const toBase3 = patternToBase3(pattern);
-        if (obj[source][toBase3] !== undefined) {
-          obj[source][toBase3] += 1;
-        } else {
-          obj[source][toBase3] = 1;
-        }
-      }
-    },
-    obj,
+    updater,
+    wordsWithScore,
     setState
   );
 }

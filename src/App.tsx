@@ -135,13 +135,12 @@ export default function App() {
   const [loading, setLoading] = useState("");
 
   const [openers, setOpeners] = useState<Array<[string, unknown]>>([]);
-  const possiblesWordsOnly = possibleWords.map(([k]) => k);
 
   function check() {
     if (currentAttempt.length < 5 || patterns.length < length.length) {
       return;
     }
-    let possibles = possiblesWordsOnly;
+    let possibles = possibleWords.map(([k]) => k);
     // first guess
     if (history.length === 0) {
       possibles = WORDLIST.Dictionnaire.filter(
@@ -160,28 +159,15 @@ export default function App() {
   }
 
   async function bestFirstGuess(letter: string, length: number) {
-    /*const possibilitiesWithScore = await withScoreNonBlocking(
-      WORDLIST.Dictionnaire.filter(
-        (m) => m.startsWith(letter.toUpperCase()) && m.length === length
-      ),
-      letter.toUpperCase() + "-" + length
-        if (!possibilitiesWithScore) throw new Error("undefined");
-    setLoading(false);
-    setOpeners(possibilitiesWithScore);
-    );*/
+    const possibilitiesWithoutScore = WORDLIST.Dictionnaire.filter(
+      (m) => m.startsWith(letter.toUpperCase()) && m.length === length
+    );
+
     withScoreNonBlockingUpdatingAsGoing(
       setOpeners,
-      WORDLIST.Dictionnaire.filter(
-        (m) => m.startsWith(letter.toUpperCase()) && m.length === length
-      ),
+      possibilitiesWithoutScore,
       (status: string) => setLoading(status)
     );
-    /*const possibilitiesWithScore = await withScorePromise(
-      WORDLIST.Dictionnaire.filter(
-        (m) => m.startsWith(letter.toUpperCase()) && m.length === length
-      ),
-      letter.toUpperCase() + "-" + length
-    );*/
   }
 
   async function handleKey(key: string) {
@@ -341,7 +327,7 @@ export default function App() {
           <List
             height={400}
             className="List"
-            itemCount={possiblesWordsOnly.length}
+            itemCount={possibleWords.length}
             itemSize={35}
             width={300}
           >
@@ -353,39 +339,48 @@ export default function App() {
       <div className="openers">
         <h1>Find best opener</h1>
         <div>
-          <input
-            onChange={(e) => {
-              setFirstLetter(e.target.value);
-            }}
-            type="text"
-            name="first letter"
-            autoComplete="off"
-            value={firstLetter}
-            maxLength={1}
-            pattern="[A-Za-z]"
-            title="First letter of the word to guess"
-          />
-          <input
-            onChange={(e) => {
-              setOpenerLength(+e.target.value);
-            }}
-            type="number"
-            name="lenght"
-            value={openerLength}
-            title="Number of letters of the word to guess"
-          />
-          <button
-            disabled={
-              loading !== "" && loading.split("/")[0] !== loading.split("/")[1]
-            }
-            onClick={() => {
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
               if (firstLetter && openerLength) {
                 bestFirstGuess(firstLetter, openerLength);
               }
             }}
           >
-            Find openers
-          </button>
+            <input
+              onChange={(e) => {
+                setFirstLetter(e.target.value);
+              }}
+              type="text"
+              name="first letter"
+              placeholder="first letter"
+              autoComplete="off"
+              value={firstLetter}
+              maxLength={1}
+              pattern="[A-Za-z]"
+              title="First letter of the word to guess"
+            />
+            <input
+              onChange={(e) => {
+                setOpenerLength(+e.target.value);
+              }}
+              type="number"
+              name="lenght"
+              min={6}
+              max={9}
+              value={openerLength}
+              title="Number of letters of the word to guess"
+            />
+            <button
+              type="submit"
+              disabled={
+                loading !== "" &&
+                loading.split("/")[0] !== loading.split("/")[1]
+              }
+            >
+              Find openers
+            </button>
+          </form>
         </div>
         {loading && <p>{loading}</p>}
         <List

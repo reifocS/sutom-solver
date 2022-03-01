@@ -71,7 +71,7 @@ html {
   cursor: pointer;
 }
 
-.openers div:nth-child(2) {
+.openers form {
   display: flex;
   margin-bottom: 16px;
   gap: 10px;
