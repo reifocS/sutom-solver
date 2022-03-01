@@ -78,7 +78,7 @@ html {
 
 .progressbar {
   display: flex;
-  align-items: start;
+  align-items: flex-start;
   font-size: 0.9rem;
   background-color: lightgray;
   font-weight: bold;
