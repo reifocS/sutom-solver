@@ -380,6 +380,9 @@ export default function App() {
               autoComplete="off"
               value={firstLetter}
               maxLength={1}
+              style={{
+                width: 40
+              }}
               pattern="[A-Za-z]"
               title="First letter of the word to guess"
             />
