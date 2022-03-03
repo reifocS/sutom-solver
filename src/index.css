@@ -86,3 +86,14 @@ html {
 .progressbar progress {
   margin-right: 16px;
 }
+
+@media (max-width: 1250px) { 
+  .App {
+    flex-direction: column;
+  }  
+
+  .controls {
+    flex-wrap: wrap;
+  }
+  
+}
