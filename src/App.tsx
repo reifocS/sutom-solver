@@ -115,9 +115,6 @@ function Cell({ letter, color }: CellProps) {
       className="cell"
       style={{
         backgroundColor: colorMap[color ?? -1],
-        padding: "15px",
-        border: "1px solid",
-        margin: "5px",
       }}
     >
       {letter}
@@ -127,7 +124,7 @@ function Cell({ letter, color }: CellProps) {
 
 function Row({ word, length, patterns }: RowProps) {
   return (
-    <div style={{ display: "flex", justifyContent: "center" }}>
+    <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}>
       {length.map((_, i) => {
         return <Cell key={i} letter={word[i]} color={patterns[i]} />;
       })}

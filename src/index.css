@@ -47,6 +47,8 @@ html {
   background-color: gray;
   font-weight: bold;
   font-size: 1.25rem;
+  padding: 16px;
+  margin: 5px;
 }
 
 .keyboard button {
@@ -87,13 +89,19 @@ html {
   margin-right: 16px;
 }
 
-@media (max-width: 1250px) { 
+@media (max-width: 1250px) {
   .App {
     flex-direction: column;
-  }  
+  }
 
   .controls {
     flex-wrap: wrap;
   }
-  
+
+  .cell {
+    padding: 10px;
+    border: 1px solid white;
+    margin: 0;
+    font-size: 0.9rem;
+  }
 }
