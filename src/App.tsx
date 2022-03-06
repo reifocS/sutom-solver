@@ -27,11 +27,11 @@ function inPercent(prog: string) {
   return (maxi - (maxi - actual)) / maxi;
 }
 
-function ProgressBar(props: ProgressBarProps) {
+export function ProgressBar(props: ProgressBarProps) {
   const { actual } = props;
   const percent = inPercent(actual) * 100;
-  return <progress value={percent.toString()} max="100"/>
-  ;
+  return <progress value={percent.toString()} max="100" />
+    ;
 }
 
 type RowProps = {

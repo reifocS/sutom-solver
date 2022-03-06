@@ -85,7 +85,7 @@ export function getPossibleWords(
   return poss;
 }
 
-function getPattern(source: string, target: string): PatternArray {
+export function getPattern(source: string, target: string): PatternArray {
   let patterns: PatternArray = [];
   source = source.toUpperCase();
   target = target.toUpperCase();
@@ -148,7 +148,6 @@ function patternToBase3(pattern: PatternArray) {
 const cache: Record<string, [string, unknown][]> = {};
 
 export function withScore(possibleWords = WORDLIST.Dictionnaire, key?: string) {
-  console.log(possibleWords.length);
   if (key && cache[key]) {
     return cache[key];
   }
@@ -247,7 +246,8 @@ function insert(array: Array<[string, number]>, value: [string, number]) {
 export async function withScoreNonBlockingUpdatingAsGoing(
   setState: React.Dispatch<React.SetStateAction<[string, unknown][]>>,
   possibleWords = WORDLIST.Dictionnaire,
-  displayStatus: (status: string) => void
+  displayStatus: (status: string) => void,
+  key?: string
 ) {
   const wordsWithScore: Array<[string, number]> = [];
   const length = possibleWords.length;
