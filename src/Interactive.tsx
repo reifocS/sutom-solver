@@ -1,16 +1,10 @@
 import React, { useState, useEffect } from "react";
 import WORDLIST from "./wordlist";
 import { FixedSizeList as List } from "react-window";
-import {
-  getPattern,
-  getPossibleWords,
-  PatternArray,
-  withScore,
-} from "./words";
+import { getPattern, getPossibleWords, PatternArray, withScore } from "./words";
+import { Link } from "react-router-dom";
 
 const length = WORDLIST.Dictionnaire.length;
-
-
 
 const colorMap = {
   0: "#0077C7",
@@ -110,7 +104,9 @@ function Cell({ letter, color }: CellProps) {
 
 function Row({ word, length, patterns }: RowProps) {
   return (
-    <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}>
+    <div
+      style={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}
+    >
       {length.map((_, i) => {
         return <Cell key={i} letter={word[i]} color={patterns[i]} />;
       })}
@@ -124,7 +120,9 @@ type CellProps = {
 };
 
 export default function App() {
-  const [wordToGuess, setWordToGuess] = useState(WORDLIST.Dictionnaire[Math.floor(Math.random() * length)])
+  const [wordToGuess, setWordToGuess] = useState(
+    WORDLIST.Dictionnaire[Math.floor(Math.random() * length)]
+  );
   const [loading, setLoading] = useState(false);
   const [possibleWords, setPossibleWords] = useState<[string, unknown][]>([]);
   const [history, setHistory] = useState<Array<any>>([]);
@@ -144,9 +142,8 @@ export default function App() {
       const { data } = await import(`./precomputed/${key}.json`);
       setPossibleWords(data);
       setLoading(false);
-
-    })()
-  }, [wordToGuess])
+    })();
+  }, [wordToGuess]);
 
   function check() {
     if (currentAttempt.length < wordLength.length) {
@@ -158,7 +155,10 @@ export default function App() {
       return;
     }
 
-    let possibles = history.length === 0 ? WORDLIST.Dictionnaire : possibleWords.map(v => v[0]);
+    let possibles =
+      history.length === 0
+        ? WORDLIST.Dictionnaire
+        : possibleWords.map((v) => v[0]);
     const pattern = getPattern(currentAttempt, wordToGuess);
     const possibilities = getPossibleWords(
       currentAttempt.toUpperCase(),
@@ -171,13 +171,12 @@ export default function App() {
       ...history,
       {
         currentAttempt,
-        pattern
+        pattern,
       },
     ];
     setHistory(newHistory);
     setCurrentAttempt(wordToGuess[0]);
   }
-
 
   async function handleKey(key: string) {
     let letter = key.toLowerCase();
@@ -189,8 +188,7 @@ export default function App() {
     } else if (letter === "backspace") {
       if (currentAttempt.length === 1) return;
       setCurrentAttempt(currentAttempt.slice(0, currentAttempt.length - 1));
-    }
-    else if (/^[a-z]$/.test(letter)) {
+    } else if (/^[a-z]$/.test(letter)) {
       if (currentAttempt.length < wordLength.length) {
         setCurrentAttempt(currentAttempt + letter);
       }
@@ -223,66 +221,71 @@ export default function App() {
       <div className={index % 2 ? "ListItemOdd" : "ListItemEven"} style={style}>
         {`${word}: ${niceDisplay}`}
       </div>
-    )
-  }
-
-
+    );
+  };
 
   return (
-    <div className="App">
-      <div>
-        <h1>SUTOM solver interactive</h1>
-        <p>Play SUTOM using information theory</p>
-        <div className="controls">
-          <button
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={(e) => {
-              reset();
-            }}
-          >
-            reset
-          </button>
-        </div>
-        <br />
-        {history.map(({ currentAttempt, pattern }, index) => (
+    <div>
+      <nav
+        style={{
+          paddingBottom: "1rem",
+        }}
+      >
+        <Link to="/">Solver</Link>{" "}
+      </nav>
+      <div className="App">
+        <div>
+          <h1>SUTOM solver interactive</h1>
+          <p>Play SUTOM using information theory</p>
+          <div className="controls">
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={(e) => {
+                reset();
+              }}
+            >
+              reset
+            </button>
+          </div>
+          <br />
+          {history.map(({ currentAttempt, pattern }, index) => (
+            <Row
+              key={index}
+              firstLetter={wordToGuess[0]}
+              word={currentAttempt.toUpperCase()}
+              length={wordLength}
+              patterns={pattern}
+            />
+          ))}
           <Row
-            key={index}
+            key={"current"}
             firstLetter={wordToGuess[0]}
             word={currentAttempt.toUpperCase()}
             length={wordLength}
-            patterns={pattern}
+            patterns={[]}
           />
-        ))}
-        <Row
-          key={"current"}
-          firstLetter={wordToGuess[0]}
-          word={currentAttempt.toUpperCase()}
-          length={wordLength}
-          patterns={[]}
-        />
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <p>Suggested words:</p>
-          {loading && (
-            <p>Searching...</p>
-          )}
-          <List
-            height={400}
-            className="List"
-            itemCount={possibleWords.length}
-            itemSize={35}
-            width={300}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
           >
-            {RowVirtualized}
-          </List>
+            <p>Suggested words:</p>
+            {loading && <p>Searching...</p>}
+            <List
+              height={200}
+              className="List"
+              itemCount={possibleWords.length}
+              itemSize={35}
+              width={300}
+            >
+              {RowVirtualized}
+            </List>
+          </div>
+          <Keyboard onKey={handleKey} />
         </div>
-        <Keyboard onKey={handleKey} />
       </div>
     </div>
   );

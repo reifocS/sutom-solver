@@ -2,12 +2,19 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+
 import Interactiv from './Interactive'
 import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
   <React.StrictMode>
-    <Interactiv />
+    <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<App />} />
+      <Route path="interactive" element={<Interactiv />} />
+    </Routes>
+    </BrowserRouter>
   </React.StrictMode>,
   document.getElementById('root')
 );
