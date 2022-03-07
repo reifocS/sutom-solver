@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import WORDLIST from "./wordlist";
 import { FixedSizeList as List } from "react-window";
+import { Link } from "react-router-dom";
 
 import {
   getPossibleWords,
@@ -27,11 +28,10 @@ function inPercent(prog: string) {
   return (maxi - (maxi - actual)) / maxi;
 }
 
-function ProgressBar(props: ProgressBarProps) {
+export function ProgressBar(props: ProgressBarProps) {
   const { actual } = props;
   const percent = inPercent(actual) * 100;
-  return <progress value={percent.toString()} max="100"/>
-  ;
+  return <progress value={percent.toString()} max="100" />;
 }
 
 type RowProps = {
@@ -124,7 +124,9 @@ function Cell({ letter, color }: CellProps) {
 
 function Row({ word, length, patterns }: RowProps) {
   return (
-    <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}>
+    <div
+      style={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}
+    >
       {length.map((_, i) => {
         return <Cell key={i} letter={word[i]} color={patterns[i]} />;
       })}
@@ -271,158 +273,167 @@ export default function App() {
   );
 
   return (
-    <div className="App">
-      <div>
-        <h1>SUTOM helper</h1>
-        <p>Assistance to solve the french version of wordle</p>
-        <div className="controls">
-          <button
-            disabled={history.length > 0 || length.length === 9}
-            onClick={() => {
-              setLength((prev) => [...prev, 0]);
-            }}
-          >
-            + letter
-          </button>
-          <button
-            disabled={history.length > 0 || length.length === 6}
-            onClick={() => {
-              if (currentAttempt.length >= length.length) {
-                setCurrentAttempt((prev) => prev.slice(0, -1));
+    <div>
+      <nav
+        style={{
+          paddingBottom: "1rem",
+        }}
+      >
+        <Link to="/interactive">Interactive version</Link>{" "}
+      </nav>
+      <div className="App">
+        <div>
+          <h1>SUTOM helper</h1>
+          <p>Assistance to solve the french version of wordle</p>
+          <div className="controls">
+            <button
+              disabled={history.length > 0 || length.length === 9}
+              onClick={() => {
+                setLength((prev) => [...prev, 0]);
+              }}
+            >
+              + letter
+            </button>
+            <button
+              disabled={history.length > 0 || length.length === 6}
+              onClick={() => {
+                if (currentAttempt.length >= length.length) {
+                  setCurrentAttempt((prev) => prev.slice(0, -1));
+                }
+                if (patterns.length >= length.length) {
+                  setPatterns((prev) => prev.slice(0, -1));
+                }
+                setLength((prev) => prev.slice(0, -1));
+              }}
+            >
+              - letter
+            </button>
+            <button
+              disabled={
+                currentAttempt.length < 5 || patterns.length < length.length
               }
-              if (patterns.length >= length.length) {
-                setPatterns((prev) => prev.slice(0, -1));
-              }
-              setLength((prev) => prev.slice(0, -1));
-            }}
-          >
-            - letter
-          </button>
-          <button
-            disabled={
-              currentAttempt.length < 5 || patterns.length < length.length
-            }
-            onClick={() => {
-              check();
-            }}
-          >
-            check
-          </button>
-          <button
-            onClick={() => {
-              setHistory([]);
-              setCurrentAttempt("");
-              setPatterns([]);
-              setPossibleWords([]);
-            }}
-          >
-            reset
-          </button>
-        </div>
-        <br />
-        {history.map(({ currentAttempt, patterns }, index) => (
+              onClick={() => {
+                check();
+              }}
+            >
+              check
+            </button>
+            <button
+              onClick={() => {
+                setHistory([]);
+                setCurrentAttempt("");
+                setPatterns([]);
+                setPossibleWords([]);
+              }}
+            >
+              reset
+            </button>
+          </div>
+          <br />
+          {history.map(({ currentAttempt, patterns }, index) => (
+            <Row
+              key={index}
+              word={currentAttempt.toUpperCase()}
+              length={length}
+              patterns={patterns}
+            />
+          ))}
           <Row
-            key={index}
+            key={"current"}
             word={currentAttempt.toUpperCase()}
             length={length}
             patterns={patterns}
           />
-        ))}
-        <Row
-          key={"current"}
-          word={currentAttempt.toUpperCase()}
-          length={length}
-          patterns={patterns}
-        />
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <small>
-            <code>"y"</code> for wrong place,
-            <code>"g"</code> for good and <code>"n"</code> for not present
-          </small>
-          <p>Possible words:</p>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <small>
+              <code>"y"</code> for wrong place,
+              <code>"g"</code> for good and <code>"n"</code> for not present
+            </small>
+            <p>Possible words:</p>
+            <List
+              height={300}
+              className="List"
+              itemCount={possibleWords.length}
+              itemSize={35}
+              width={300}
+            >
+              {RowVirtualized}
+            </List>
+          </div>
+          <Keyboard onKey={handleKey} />
+        </div>
+        <div className="openers">
+          <h1>Find best opener</h1>
+          <div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (firstLetter && openerLength) {
+                  bestFirstGuess(firstLetter, openerLength);
+                }
+              }}
+            >
+              <input
+                onChange={(e) => {
+                  setFirstLetter(e.target.value);
+                }}
+                type="text"
+                name="first letter"
+                placeholder="first letter"
+                autoComplete="off"
+                value={firstLetter}
+                maxLength={1}
+                style={{
+                  width: 40,
+                }}
+                pattern="[A-Za-z]"
+                title="First letter of the word to guess"
+              />
+              <input
+                onChange={(e) => {
+                  setOpenerLength(+e.target.value);
+                }}
+                type="number"
+                name="lenght"
+                min={6}
+                max={9}
+                value={openerLength}
+                title="Number of letters of the word to guess"
+              />
+              <button
+                type="submit"
+                disabled={
+                  loading !== "" &&
+                  loading.split("/")[0] !== loading.split("/")[1]
+                }
+              >
+                Find openers
+              </button>
+            </form>
+          </div>
+          {loading && (
+            <div className="progressbar">
+              <ProgressBar actual={loading} />
+              {loading}
+            </div>
+          )}
           <List
             height={400}
             className="List"
-            itemCount={possibleWords.length}
+            itemCount={openers.length}
             itemSize={35}
             width={300}
           >
-            {RowVirtualized}
+            {RowVirtualizedOpeners}
           </List>
         </div>
-        <Keyboard onKey={handleKey} />
-      </div>
-      <div className="openers">
-        <h1>Find best opener</h1>
-        <div>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (firstLetter && openerLength) {
-                bestFirstGuess(firstLetter, openerLength);
-              }
-            }}
-          >
-            <input
-              onChange={(e) => {
-                setFirstLetter(e.target.value);
-              }}
-              type="text"
-              name="first letter"
-              placeholder="first letter"
-              autoComplete="off"
-              value={firstLetter}
-              maxLength={1}
-              style={{
-                width: 40
-              }}
-              pattern="[A-Za-z]"
-              title="First letter of the word to guess"
-            />
-            <input
-              onChange={(e) => {
-                setOpenerLength(+e.target.value);
-              }}
-              type="number"
-              name="lenght"
-              min={6}
-              max={9}
-              value={openerLength}
-              title="Number of letters of the word to guess"
-            />
-            <button
-              type="submit"
-              disabled={
-                loading !== "" &&
-                loading.split("/")[0] !== loading.split("/")[1]
-              }
-            >
-              Find openers
-            </button>
-          </form>
-        </div>
-        {loading && (
-          <div className="progressbar">
-            <ProgressBar actual={loading} />
-            {loading}
-          </div>
-        )}
-        <List
-          height={400}
-          className="List"
-          itemCount={openers.length}
-          itemSize={35}
-          width={300}
-        >
-          {RowVirtualizedOpeners}
-        </List>
       </div>
     </div>
   );
