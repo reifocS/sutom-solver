@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import WORDLIST from "./wordlist";
 import { FixedSizeList as List } from "react-window";
 import { getPattern, getPossibleWords, PatternArray, withScore } from "./words";
 import { Link } from "react-router-dom";
+import { onlyWords } from "./parseDict";
+import wordlist from "./wordlist";
 
-const length = WORDLIST.Dictionnaire.length;
+const length = onlyWords.length;
 
 const colorMap = {
   0: "#0077C7",
@@ -121,7 +122,7 @@ type CellProps = {
 
 export default function App() {
   const [wordToGuess, setWordToGuess] = useState(
-    WORDLIST.Dictionnaire[Math.floor(Math.random() * length)]
+    onlyWords[Math.floor(Math.random() * length)]
   );
   const [loading, setLoading] = useState(false);
   const [possibleWords, setPossibleWords] = useState<[string, unknown][]>([]);
@@ -150,15 +151,13 @@ export default function App() {
       throw new Error("How?");
     }
 
-    if (!WORDLIST.Dictionnaire.includes(currentAttempt.toUpperCase())) {
+    if (!wordlist.Dictionnaire.includes(currentAttempt.toUpperCase())) {
       alert("Mot non valide");
       return;
     }
 
     let possibles =
-      history.length === 0
-        ? WORDLIST.Dictionnaire
-        : possibleWords.map((v) => v[0]);
+      history.length === 0 ? wordlist.Dictionnaire : possibleWords.map((v) => v[0]);
     const pattern = getPattern(currentAttempt, wordToGuess);
     const possibilities = getPossibleWords(
       currentAttempt.toUpperCase(),
@@ -203,7 +202,7 @@ export default function App() {
   }
 
   function reset() {
-    const word = WORDLIST.Dictionnaire[Math.floor(Math.random() * length)];
+    const word = onlyWords[Math.floor(Math.random() * length)];
     setWordToGuess(word);
     setCurrentAttempt(word[0]);
     setHistory([]);
@@ -216,10 +215,10 @@ export default function App() {
 
   const RowVirtualized = ({ index, style }: { index: number; style: any }) => {
     const [word, score] = possibleWords[index];
-    const niceDisplay = Math.round(+(score as number) * 1000) / 1000;
+    //const niceDisplay = Math.round(+(score as number) * 1000) / 1000;
     return (
       <div className={index % 2 ? "ListItemOdd" : "ListItemEven"} style={style}>
-        {`${word}: ${niceDisplay}`}
+        {`${word}: ${score}`}
       </div>
     );
   };
@@ -228,6 +227,8 @@ export default function App() {
     <div>
       <nav
         style={{
+          fontSize: "1.5rem",
+          fontWeight: "bold",
           paddingBottom: "1rem",
         }}
       >

@@ -276,6 +276,8 @@ export default function App() {
     <div>
       <nav
         style={{
+          fontSize: "1.5rem",
+          fontWeight: "bold",
           paddingBottom: "1rem",
         }}
       >

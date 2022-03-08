@@ -1,3 +1,4 @@
+import { wordWithFreq } from "./parseDict";
 import WORDLIST from "./wordlist";
 
 export type PatternArray = Array<Pattern>;
@@ -176,7 +177,7 @@ export function withScore(possibleWords = WORDLIST.Dictionnaire, key?: string) {
       const px = (val as number) / nbOfWords;
       sum += px * Math.log2(1 / px);
     }
-    result[k] = sum;
+    result[k] = sum + (wordWithFreq as any)[k] * 100;
   });
 
   const inOrder = Object.entries(result).sort(function (a: any, b: any) {
