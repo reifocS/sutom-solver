@@ -160,6 +160,9 @@ export function withScore(possibleWords = WORDLIST.Dictionnaire, key?: string) {
     // the possible patterns of this word with nb of occurences
     obj[source] = {};
     for (const target of possibleWords) {
+      if(wordWithFreq[target] < 3.02e-7) {
+        continue;
+      }
       const pattern = getPattern(source, target);
       const toBase3 = patternToBase3(pattern);
       if (obj[source][toBase3] !== undefined) {

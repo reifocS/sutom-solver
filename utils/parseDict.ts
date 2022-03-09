@@ -1,4 +1,4 @@
-import wordWithFreq from "./withfreq.json";
+import wordWithFreq from "../public/withfreq.json";
 
 // Remove really uncommon words
 const onlyWords = Object.keys(wordWithFreq).filter(

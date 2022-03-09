@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { FixedSizeList as List } from "react-window";
-import { getPattern, getPossibleWords, PatternArray, withScore } from "./words";
-import { Link } from "react-router-dom";
-import { onlyWords } from "./parseDict";
-import wordlist from "./wordlist";
+import { getPattern, getPossibleWords, PatternArray, withScore } from "../utils/words";
+import Link  from "next/link";
+import { onlyWords } from "../utils/parseDict";
+import wordlist from "../utils/wordlist";
 
 const length = onlyWords.length;
 
@@ -140,7 +140,7 @@ export default function App() {
     const key = `${firstLetter}-${length}`;
     (async () => {
       setLoading(true);
-      const { data } = await import(`./precomputed/${key}.json`);
+      const { data } = await import(`../public/precomputed/${key}.json`);
       setPossibleWords(data);
       setLoading(false);
     })();
@@ -232,7 +232,7 @@ export default function App() {
           paddingBottom: "1rem",
         }}
       >
-        <Link to="/">Solver</Link>{" "}
+        <Link href="/">Solver</Link>{" "}
       </nav>
       <div className="App">
         <div>

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
-import WORDLIST from "./wordlist";
+import WORDLIST from "../utils/wordlist";
 import { FixedSizeList as List } from "react-window";
-import { Link } from "react-router-dom";
+import Link  from "next/link"
 
 import {
   getPossibleWords,
   PatternArray,
   withScore,
   withScoreNonBlockingUpdatingAsGoing,
-} from "./words";
+} from "../utils/words";
 
 const colorMap = {
   0: "#0077C7",
@@ -281,7 +281,7 @@ export default function App() {
           paddingBottom: "1rem",
         }}
       >
-        <Link to="/interactive">Interactive version</Link>{" "}
+        <Link href={"/interactive"}>Interactive version</Link>{" "}
       </nav>
       <div className="App">
         <div>
