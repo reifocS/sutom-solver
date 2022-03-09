@@ -1,5 +1,4 @@
 import { wordWithFreq } from "./parseDict";
-import WORDLIST from "./wordlist";
 
 export type PatternArray = Array<Pattern>;
 
@@ -148,7 +147,7 @@ function patternToBase3(pattern: PatternArray) {
 
 const cache: Record<string, [string, unknown][]> = {};
 
-export function withScore(possibleWords = WORDLIST.Dictionnaire, key?: string) {
+export function withScore(possibleWords, key?: string) {
   if (key && cache[key]) {
     return cache[key];
   }
@@ -194,7 +193,7 @@ export function withScore(possibleWords = WORDLIST.Dictionnaire, key?: string) {
 }
 
 export const withScorePromise = (
-  possibleWords = WORDLIST.Dictionnaire,
+  possibleWords,
   key?: string
 ) =>
   new Promise<[string, unknown][]>((resolve) =>
@@ -249,7 +248,7 @@ function insert(array: Array<[string, number]>, value: [string, number]) {
 
 export async function withScoreNonBlockingUpdatingAsGoing(
   setState: React.Dispatch<React.SetStateAction<[string, unknown][]>>,
-  possibleWords = WORDLIST.Dictionnaire,
+  possibleWords,
   displayStatus: (status: string) => void,
   key?: string
 ) {

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import WORDLIST from "../utils/wordlist";
 import { FixedSizeList as List } from "react-window";
 import Link  from "next/link"
 
@@ -9,6 +8,11 @@ import {
   withScore,
   withScoreNonBlockingUpdatingAsGoing,
 } from "../utils/words";
+
+import { wordWithFreq } from "../utils/parseDict";
+
+
+const WORDLIST = Object.keys(wordWithFreq);
 
 const colorMap = {
   0: "#0077C7",
@@ -160,7 +164,7 @@ export default function App() {
     let possibles = possibleWords.map(([k]) => k);
     // first guess
     if (history.length === 0) {
-      possibles = WORDLIST.Dictionnaire.filter(
+      possibles = WORDLIST.filter(
         (m) =>
           m.startsWith(currentAttempt[0].toUpperCase()) &&
           m.length === length.length
@@ -186,7 +190,7 @@ export default function App() {
   }
 
   async function bestFirstGuess(letter: string, length: number) {
-    const possibilitiesWithoutScore = WORDLIST.Dictionnaire.filter(
+    const possibilitiesWithoutScore = WORDLIST.filter(
       (m) => m.startsWith(letter.toUpperCase()) && m.length === length
     );
 

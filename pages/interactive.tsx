@@ -3,7 +3,6 @@ import { FixedSizeList as List } from "react-window";
 import { getPattern, getPossibleWords, PatternArray, withScore } from "../utils/words";
 import Link  from "next/link";
 import { onlyWords } from "../utils/parseDict";
-import wordlist from "../utils/wordlist";
 
 const length = onlyWords.length;
 
@@ -151,13 +150,13 @@ export default function App() {
       throw new Error("How?");
     }
 
-    if (!wordlist.Dictionnaire.includes(currentAttempt.toUpperCase())) {
+    if (!onlyWords.includes(currentAttempt.toUpperCase())) {
       alert("Mot non valide");
       return;
     }
 
     let possibles =
-      history.length === 0 ? wordlist.Dictionnaire : possibleWords.map((v) => v[0]);
+      history.length === 0 ? onlyWords: possibleWords.map((v) => v[0]);
     const pattern = getPattern(currentAttempt, wordToGuess);
     const possibilities = getPossibleWords(
       currentAttempt.toUpperCase(),
