@@ -445,6 +445,6 @@ export default function App({ wordWithFreq }) {
 }
 
 export async function getStaticProps() {
-  const { wordWithFreq } = await import("../utils/parseDict");
-  return { props: { wordWithFreq } };
+  const wordWithFreq = await import("../public/withfreq.json");
+   return { props: { wordWithFreq } };
 }
