@@ -377,7 +377,7 @@ export default function App({ onlyWords, wordWithFreq }) {
 
 export async function getStaticProps() {
   const wordWithFreq = await import("../public/withfreq.json");
-  const onlyWords = Object.keys(wordWithFreq).filter(
+  const onlyWords = Object.keys(wordWithFreq.default).filter(
     (mot) =>
       mot.length >= 6 &&
       mot.length <= 9 &&
@@ -392,5 +392,5 @@ export async function getStaticProps() {
       !mot.toUpperCase().startsWith("Y") &&
       !mot.toUpperCase().startsWith("Z")
   );
-  return { props: { onlyWords, wordWithFreq } };
+  return { props: { onlyWords, wordWithFreq: wordWithFreq.default } };
 }
