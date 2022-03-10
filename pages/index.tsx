@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FixedSizeList as List } from "react-window";
-import Link  from "next/link"
+import Link from "next/link";
 
 import {
   getPossibleWords,
@@ -8,11 +8,6 @@ import {
   withScore,
   withScoreNonBlockingUpdatingAsGoing,
 } from "../utils/words";
-
-import { wordWithFreq } from "../utils/parseDict";
-
-
-const WORDLIST = Object.keys(wordWithFreq);
 
 const colorMap = {
   0: "#0077C7",
@@ -143,7 +138,7 @@ type CellProps = {
   color?: 0 | 1 | 2;
 };
 
-export default function App() {
+export default function App({ wordWithFreq }) {
   const [patterns, setPatterns] = useState<PatternArray>([]);
   const [currentAttempt, setCurrentAttempt] = useState("");
   const [possibleWords, setPossibleWords] = useState<Array<[string, unknown]>>(
@@ -156,6 +151,10 @@ export default function App() {
   const [loading, setLoading] = useState("");
 
   const [openers, setOpeners] = useState<Array<[string, unknown]>>([]);
+
+  const WORDLIST = React.useMemo(() => {
+    return Object.keys(wordWithFreq);
+  }, [wordWithFreq]);
 
   function check() {
     if (currentAttempt.length < 5 || patterns.length < length.length) {
@@ -175,7 +174,7 @@ export default function App() {
       patterns,
       possibles
     );
-    const possibilitiesWithScore = withScore(possibilities);
+    const possibilitiesWithScore = withScore(possibilities, wordWithFreq);
     setPossibleWords(possibilitiesWithScore);
     let newHistory = [
       ...history,
@@ -443,4 +442,9 @@ export default function App() {
       </div>
     </div>
   );
+}
+
+export async function getStaticProps() {
+  const { wordWithFreq } = await import("../utils/parseDict");
+  return { props: { wordWithFreq } };
 }

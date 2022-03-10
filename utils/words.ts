@@ -1,5 +1,3 @@
-import { wordWithFreq } from "./parseDict";
-
 export type PatternArray = Array<Pattern>;
 
 type Pattern = 0 | 1 | 2;
@@ -77,7 +75,6 @@ export function getPossibleWords(
   patterns: PatternArray,
   possibles: Array<string>
 ) {
-  console.log("possibleWord");
   let poss: Array<string> = [];
   possibles.forEach((word) => {
     if (checkConformity(source, word, patterns)) poss.push(word);
@@ -147,7 +144,7 @@ function patternToBase3(pattern: PatternArray) {
 
 const cache: Record<string, [string, unknown][]> = {};
 
-export function withScore(possibleWords, key?: string) {
+export function withScore(possibleWords, wordWithFreq, key?: string) {
   if (key && cache[key]) {
     return cache[key];
   }

@@ -1,16 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { FixedSizeList as List } from "react-window";
-import { getPattern, getPossibleWords, PatternArray, withScore } from "../utils/words";
-import Link  from "next/link";
-import { onlyWords } from "../utils/parseDict";
+import {
+  getPattern,
+  getPossibleWords,
+  PatternArray,
+  withScore,
+} from "../utils/words";
+import Link from "next/link";
 
-const length = onlyWords.length;
+let GREY = 0;
+let RED = 2;
+let YELLOW = 1;
 
 const colorMap = {
   0: "#0077C7",
   1: "#FFBD00",
   2: "#E7002A",
   [-1]: "",
+  undefined: "lightgray",
+};
+
+const colorMapKeyboard = {
+  0: "rgb(112, 112, 112)",
+  1: "#FFBD00",
+  2: "#E7002A",
+  [-1]: "",
+  undefined: "lightgray",
 };
 
 type RowProps = {
@@ -24,14 +39,15 @@ type ButtonProps = {
   buttonKey: string;
   children: React.ReactChild;
   onKey: (s: string) => void;
+  color?: string;
 };
 
-function Button({ buttonKey, children, onKey }: ButtonProps) {
+function Button({ buttonKey, children, onKey, color }: ButtonProps) {
   return (
     <button
       className="button"
       style={{
-        backgroundColor: "lightgray",
+        backgroundColor: color ? color : "lightgray",
         borderColor: "lightgray",
       }}
       onClick={() => {
@@ -45,15 +61,17 @@ function Button({ buttonKey, children, onKey }: ButtonProps) {
 
 type KeyboardProps = {
   onKey: (s: string) => void;
+  bestColors: Map<string, number>;
 };
 
 type KeyboardRowProps = {
   onKey: (s: string) => void;
   letters: string;
   isLast: boolean;
+  bestColors: Map<string, number>;
 };
 
-function KeyboardRow({ letters, isLast, onKey }: KeyboardRowProps) {
+function KeyboardRow({ letters, isLast, onKey, bestColors }: KeyboardRowProps) {
   let buttons = [];
   if (isLast) {
     buttons.push(
@@ -64,7 +82,12 @@ function KeyboardRow({ letters, isLast, onKey }: KeyboardRowProps) {
   }
   for (let letter of letters.split("")) {
     buttons.push(
-      <Button onKey={onKey} key={letter} buttonKey={letter}>
+      <Button
+        onKey={onKey}
+        key={letter}
+        buttonKey={letter}
+        color={colorMapKeyboard[bestColors.get(letter)]}
+      >
         {letter}
       </Button>
     );
@@ -79,12 +102,27 @@ function KeyboardRow({ letters, isLast, onKey }: KeyboardRowProps) {
   return <div>{buttons}</div>;
 }
 
-function Keyboard({ onKey }: KeyboardProps) {
+function Keyboard({ onKey, bestColors }: KeyboardProps) {
   return (
     <div className="keyboard" id="keyboard">
-      <KeyboardRow letters="qwertyuiop" onKey={onKey} isLast={false} />
-      <KeyboardRow letters="asdfghjkl" onKey={onKey} isLast={false} />
-      <KeyboardRow letters="zxcvbnm" onKey={onKey} isLast={true} />
+      <KeyboardRow
+        letters="qwertyuiop"
+        onKey={onKey}
+        isLast={false}
+        bestColors={bestColors}
+      />
+      <KeyboardRow
+        letters="asdfghjkl"
+        onKey={onKey}
+        isLast={false}
+        bestColors={bestColors}
+      />
+      <KeyboardRow
+        letters="zxcvbnm"
+        onKey={onKey}
+        isLast={true}
+        bestColors={bestColors}
+      />
     </div>
   );
 }
@@ -119,16 +157,26 @@ type CellProps = {
   color?: 0 | 1 | 2;
 };
 
-export default function App() {
+type StateHistory = Array<{
+  currentAttempt: string;
+  pattern: PatternArray;
+}>;
+
+export default function App({ onlyWords, wordWithFreq }) {
+  const length = onlyWords.length;
   const [wordToGuess, setWordToGuess] = useState(
-    onlyWords[Math.floor(Math.random() * length)]
+    () => onlyWords[Math.floor(Math.random() * length)]
   );
   const [loading, setLoading] = useState(false);
   const [possibleWords, setPossibleWords] = useState<[string, unknown][]>([]);
-  const [history, setHistory] = useState<Array<any>>([]);
+  const [history, setHistory] = useState<StateHistory>([]);
   const [currentAttempt, setCurrentAttempt] = useState(wordToGuess[0]);
+  const [spoilerOn, showSpoiler] = useState(false);
 
   let wordLength: string[] = [];
+  const ALLWORDS = React.useMemo(() => {
+    return new Set(Object.keys(wordWithFreq));
+  }, [wordWithFreq]);
   for (let i = 0; i < wordToGuess.length; ++i) {
     wordLength.push("");
   }
@@ -150,20 +198,21 @@ export default function App() {
       throw new Error("How?");
     }
 
-    if (!onlyWords.includes(currentAttempt.toUpperCase())) {
+    if (!ALLWORDS.has(currentAttempt.toUpperCase())) {
+      console.log(onlyWords);
       alert("Mot non valide");
       return;
     }
 
     let possibles =
-      history.length === 0 ? onlyWords: possibleWords.map((v) => v[0]);
+      history.length === 0 ? onlyWords : possibleWords.map((v) => v[0]);
     const pattern = getPattern(currentAttempt, wordToGuess);
     const possibilities = getPossibleWords(
       currentAttempt.toUpperCase(),
       pattern,
       possibles
     );
-    const possibilitiesWithScore = withScore(possibilities);
+    const possibilitiesWithScore = withScore(possibilities, wordWithFreq);
     setPossibleWords(possibilitiesWithScore);
     let newHistory = [
       ...history,
@@ -174,12 +223,13 @@ export default function App() {
     ];
     setHistory(newHistory);
     setCurrentAttempt(wordToGuess[0]);
+    showSpoiler(false);
   }
 
   async function handleKey(key: string) {
     let letter = key.toLowerCase();
     if (letter === "enter") {
-      if (currentAttempt.length < 5) {
+      if (currentAttempt.length < wordLength.length) {
         return;
       }
       check();
@@ -222,6 +272,31 @@ export default function App() {
     );
   };
 
+  function calculateBestColors(history: StateHistory) {
+    let map = new Map();
+    for (let { currentAttempt: attempt, pattern } of history) {
+      for (let i = 0; i < attempt.length; i++) {
+        let color = pattern[i];
+        let key = attempt[i];
+        let bestColor = map.get(key);
+        map.set(key, getBetterColor(color, bestColor));
+      }
+    }
+    return map;
+  }
+
+  function getBetterColor(a, b) {
+    if (a === RED || b === RED) {
+      return RED;
+    }
+    if (a === YELLOW || b === YELLOW) {
+      return YELLOW;
+    }
+    return GREY;
+  }
+
+  const bestColors = calculateBestColors(history);
+
   return (
     <div>
       <nav
@@ -240,7 +315,7 @@ export default function App() {
           <div className="controls">
             <button
               onMouseDown={(e) => e.preventDefault()}
-              onClick={(e) => {
+              onClick={() => {
                 reset();
               }}
             >
@@ -274,19 +349,33 @@ export default function App() {
           >
             <p>Suggested words:</p>
             {loading && <p>Searching...</p>}
-            <List
-              height={200}
-              className="List"
-              itemCount={possibleWords.length}
-              itemSize={35}
-              width={300}
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              className="spoilers"
+              onClick={() => showSpoiler((prev) => !prev)}
             >
-              {RowVirtualized}
-            </List>
+              {`${spoilerOn ? "hide help" : "show help"}`}
+            </button>
+            {spoilerOn && (
+              <List
+                height={200}
+                className="List"
+                itemCount={possibleWords.length}
+                itemSize={35}
+                width={300}
+              >
+                {RowVirtualized}
+              </List>
+            )}
           </div>
-          <Keyboard onKey={handleKey} />
+          <Keyboard onKey={handleKey} bestColors={bestColors} />
         </div>
       </div>
     </div>
   );
+}
+
+export async function getStaticProps() {
+  const { onlyWords, wordWithFreq } = await import("../utils/parseDict");
+  return { props: { onlyWords, wordWithFreq } };
 }

@@ -1,108 +1,135 @@
 html {
-    font-family: sans-serif;
-    font-size: 12px;
-  }
-  
+  font-family: sans-serif;
+  font-size: 12px;
+}
+
+.App {
+  text-align: center;
+  justify-content: space-evenly;
+  display: flex;
+}
+
+.List {
+  border: 1px solid black;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.controls button {
+  border: none;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.ListItemEven,
+.ListItemOdd {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ListItemEven {
+  background-color: #f8f8f0;
+}
+
+.cell {
+  min-width: 16px;
+  min-height: 16px;
+  color: white;
+  background-color: gray;
+  font-weight: bold;
+  font-size: 1.25rem;
+  padding: 16px;
+  margin: 5px;
+}
+
+.keyboard {
+  margin: 0.5em auto 2em;
+  max-width: 100%;
+  width: calc(100% - 20px);
+  max-width: 500px;
+}
+
+.keyboard div {
+  display: flex;
+  justify-content: center;
+  gap: 0.25em;
+}
+
+.keyboard button {
+  font-size: 18px;
+  display: inline-block;
+  border-radius: 5px;
+  height: 45px;
+  font-family: monospace;
+}
+
+.spoilers {
+  border: none;
+  padding: 10px 22px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 5px;
+}
+
+.openers {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.openers button {
+  border: none;
+  padding: 10px 22px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.openers form {
+  display: flex;
+  margin-bottom: 16px;
+  gap: 10px;
+}
+
+.progressbar {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  flex-direction: column;
+}
+
+.progressbar progress {
+  margin-right: 16px;
+}
+
+@media (max-width: 1250px) {
   .App {
-    text-align: center;
-    justify-content: space-evenly;
-    display: flex;
+    flex-direction: column;
   }
-  
-  .List {
-    border: 1px solid black;
-  }
-  
+
   .controls {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
+    flex-wrap: wrap;
   }
-  
-  .controls button {
-    border: none;
-    padding: 15px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    cursor: pointer;
-  }
-  
-  .ListItemEven,
-  .ListItemOdd {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .ListItemEven {
-    background-color: #f8f8f0;
-  }
-  
+
   .cell {
-    min-width: 16px;
-    min-height: 16px;
-    color: white;
-    background-color: gray;
-    font-weight: bold;
-    font-size: 1.25rem;
-    padding: 16px;
-    margin: 5px;
-  }
-  
-  .keyboard button {
     padding: 10px;
-    margin-top: 6px;
+    border: 1px solid white;
+    margin: 0;
+    font-size: 0.9rem;
   }
-  
-  .openers {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .openers button {
-    border: none;
-    padding: 10px 22px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    cursor: pointer;
-  }
-  
-  .openers form {
-    display: flex;
-    margin-bottom: 16px;
-    gap: 10px;
-  }
-  
-  .progressbar {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    flex-direction: column;
-  }
-  
-  .progressbar progress {
-    margin-right: 16px;
-  }
-  
-  @media (max-width: 1250px) {
-    .App {
-      flex-direction: column;
-    }
-  
-    .controls {
-      flex-wrap: wrap;
-    }
-  
-    .cell {
-      padding: 10px;
-      border: 1px solid white;
-      margin: 0;
-      font-size: 0.9rem;
-    }
-  }
-  
+}
