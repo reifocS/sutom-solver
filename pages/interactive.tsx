@@ -3,7 +3,7 @@ import { FixedSizeList as List } from "react-window";
 import { AiOutlineEnter } from "react-icons/ai";
 import { MdOutlineKeyboardBackspace, MdOutlineReplay } from "react-icons/md";
 import { RiEyeCloseLine, RiEyeLine as EyeOpen } from "react-icons/ri";
-
+import { wordWithFreq, onlyWords } from "../utils/parseDict";
 import {
   getPattern,
   getPossibleWords,
@@ -165,7 +165,7 @@ type StateHistory = Array<{
   pattern: PatternArray;
 }>;
 
-export default function App({ onlyWords, wordWithFreq }) {
+export default function App() {
   const length = onlyWords.length;
   const [wordToGuess, setWordToGuess] = useState(
     () => onlyWords[Math.floor(Math.random() * length)]
@@ -371,24 +371,4 @@ export default function App({ onlyWords, wordWithFreq }) {
       </div>
     </div>
   );
-}
-
-export async function getStaticProps() {
-  const wordWithFreq = await import("../public/withfreq.json");
-  const onlyWords = Object.keys(wordWithFreq.default).filter(
-    (mot) =>
-      mot.length >= 6 &&
-      mot.length <= 9 &&
-      (wordWithFreq as any)[mot] > 3.02e-6 &&
-      !mot.includes("!") &&
-      !mot.includes(" ") &&
-      !mot.includes("-") &&
-      !mot.toUpperCase().startsWith("K") &&
-      !mot.toUpperCase().startsWith("Q") &&
-      !mot.toUpperCase().startsWith("W") &&
-      !mot.toUpperCase().startsWith("X") &&
-      !mot.toUpperCase().startsWith("Y") &&
-      !mot.toUpperCase().startsWith("Z")
-  );
-  return { props: { onlyWords, wordWithFreq: wordWithFreq.default } };
 }

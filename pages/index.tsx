@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FixedSizeList as List } from "react-window";
 import Link from "next/link";
-
+import { wordWithFreq } from "../utils/parseDict";
 import {
   getPossibleWords,
   PatternArray,
@@ -136,7 +136,7 @@ type CellProps = {
   color?: 0 | 1 | 2;
 };
 
-export default function App({ wordWithFreq }) {
+export default function App() {
   const [patterns, setPatterns] = useState<PatternArray>([]);
   const [currentAttempt, setCurrentAttempt] = useState("");
   const [possibleWords, setPossibleWords] = useState<Array<[string, unknown]>>(
@@ -434,9 +434,4 @@ export default function App({ wordWithFreq }) {
       </div>
     </div>
   );
-}
-
-export async function getStaticProps() {
-  const wordWithFreq = await import("../public/withfreq.json");
-  return { props: { wordWithFreq: wordWithFreq.default } };
 }
