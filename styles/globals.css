@@ -44,6 +44,10 @@ nav {
   color: #fff;
 }
 
+.controls button:disabled {
+  opacity: 0.5;
+}
+
 .ListItemEven,
 .ListItemOdd {
   display: flex;
