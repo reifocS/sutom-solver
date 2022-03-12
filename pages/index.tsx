@@ -8,6 +8,8 @@ import {
   withScore,
   withScoreNonBlockingUpdatingAsGoing,
 } from "../utils/words";
+import { MdOutlineKeyboardBackspace } from "react-icons/md";
+import { AiOutlineEnter } from "react-icons/ai";
 
 const colorMap = {
   0: "#0077C7",
@@ -76,8 +78,8 @@ function KeyboardRow({ letters, isLast, onKey }: KeyboardRowProps) {
   let buttons = [];
   if (isLast) {
     buttons.push(
-      <Button onKey={onKey} key="enter" buttonKey="Enter">
-        Enter
+      <Button onKey={onKey} key="backspace" buttonKey="Backspace">
+        <MdOutlineKeyboardBackspace />
       </Button>
     );
   }
@@ -90,8 +92,8 @@ function KeyboardRow({ letters, isLast, onKey }: KeyboardRowProps) {
   }
   if (isLast) {
     buttons.push(
-      <Button onKey={onKey} key="backspace" buttonKey="Backspace">
-        Backspace
+      <Button onKey={onKey} key="enter" buttonKey="Enter">
+        <AiOutlineEnter />
       </Button>
     );
   }
@@ -101,9 +103,9 @@ function KeyboardRow({ letters, isLast, onKey }: KeyboardRowProps) {
 function Keyboard({ onKey }: KeyboardProps) {
   return (
     <div className="keyboard" id="keyboard">
-      <KeyboardRow letters="qwertyuiop" onKey={onKey} isLast={false} />
-      <KeyboardRow letters="asdfghjkl" onKey={onKey} isLast={false} />
-      <KeyboardRow letters="zxcvbnm" onKey={onKey} isLast={true} />
+      <KeyboardRow letters="azertyuiop" onKey={onKey} isLast={false} />
+      <KeyboardRow letters="qsdfghjklm" onKey={onKey} isLast={false} />
+      <KeyboardRow letters="wxcvbn" onKey={onKey} isLast={true} />
     </div>
   );
 }
@@ -213,9 +215,9 @@ export default function App({ wordWithFreq }) {
       } else {
         setCurrentAttempt(currentAttempt.slice(0, currentAttempt.length - 1));
       }
-    } else if (letter === "+" && history.length === 0) {
+    } else if (letter === "+" && history.length === 0 && length.length < 9) {
       setLength((prev) => [...prev, 0]);
-    } else if (letter === "-" && history.length === 0) {
+    } else if (letter === "-" && history.length === 0 && length.length > 6) {
       if (currentAttempt.length >= length.length) {
         setCurrentAttempt((prev) => prev.slice(0, -1));
       }
@@ -277,13 +279,7 @@ export default function App({ wordWithFreq }) {
 
   return (
     <div>
-      <nav
-        style={{
-          fontSize: "1.5rem",
-          fontWeight: "bold",
-          paddingBottom: "1rem",
-        }}
-      >
+      <nav>
         <Link href={"/interactive"}>Interactive version</Link>{" "}
       </nav>
       <div className="App">
@@ -363,7 +359,7 @@ export default function App({ wordWithFreq }) {
             </small>
             <p>Possible words:</p>
             <List
-              height={300}
+              height={225}
               className="List"
               itemCount={possibleWords.length}
               itemSize={35}
@@ -445,6 +441,6 @@ export default function App({ wordWithFreq }) {
 }
 
 export async function getStaticProps() {
-  const wordWithFreq = (await import("../public/withfreq.json"));
-   return { props: { wordWithFreq: wordWithFreq.default } };
+  const wordWithFreq = await import("../public/withfreq.json");
+  return { props: { wordWithFreq: wordWithFreq.default } };
 }

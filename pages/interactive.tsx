@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FixedSizeList as List } from "react-window";
+import { AiOutlineEnter } from "react-icons/ai";
+import { MdOutlineKeyboardBackspace } from "react-icons/md";
 import {
   getPattern,
   getPossibleWords,
@@ -17,7 +19,7 @@ const colorMap = {
   1: "#FFBD00",
   2: "#E7002A",
   [-1]: "",
-  undefined: "lightgray",
+  undefined: "black",
 };
 
 const colorMapKeyboard = {
@@ -25,7 +27,7 @@ const colorMapKeyboard = {
   1: "#FFBD00",
   2: "#E7002A",
   [-1]: "",
-  undefined: "lightgray",
+  undefined: "black",
 };
 
 type RowProps = {
@@ -47,7 +49,7 @@ function Button({ buttonKey, children, onKey, color }: ButtonProps) {
     <button
       className="button"
       style={{
-        backgroundColor: color ? color : "lightgray",
+        backgroundColor: color ? color : "black",
         borderColor: "lightgray",
       }}
       onClick={() => {
@@ -75,8 +77,8 @@ function KeyboardRow({ letters, isLast, onKey, bestColors }: KeyboardRowProps) {
   let buttons = [];
   if (isLast) {
     buttons.push(
-      <Button onKey={onKey} key="enter" buttonKey="Enter">
-        Enter
+      <Button onKey={onKey} key="backspace" buttonKey="Backspace">
+        <MdOutlineKeyboardBackspace />
       </Button>
     );
   }
@@ -94,8 +96,8 @@ function KeyboardRow({ letters, isLast, onKey, bestColors }: KeyboardRowProps) {
   }
   if (isLast) {
     buttons.push(
-      <Button onKey={onKey} key="backspace" buttonKey="Backspace">
-        Backspace
+      <Button onKey={onKey} key="enter" buttonKey="Enter">
+        <AiOutlineEnter />
       </Button>
     );
   }
@@ -106,19 +108,19 @@ function Keyboard({ onKey, bestColors }: KeyboardProps) {
   return (
     <div className="keyboard" id="keyboard">
       <KeyboardRow
-        letters="qwertyuiop"
+        letters="azertyuiop"
         onKey={onKey}
         isLast={false}
         bestColors={bestColors}
       />
       <KeyboardRow
-        letters="asdfghjkl"
+        letters="qsdfghjklm"
         onKey={onKey}
         isLast={false}
         bestColors={bestColors}
       />
       <KeyboardRow
-        letters="zxcvbnm"
+        letters="wxcvbn"
         onKey={onKey}
         isLast={true}
         bestColors={bestColors}
@@ -299,13 +301,7 @@ export default function App({ onlyWords, wordWithFreq }) {
 
   return (
     <div>
-      <nav
-        style={{
-          fontSize: "1.5rem",
-          fontWeight: "bold",
-          paddingBottom: "1rem",
-        }}
-      >
+      <nav>
         <Link href="/">Solver</Link>{" "}
       </nav>
       <div className="App">
