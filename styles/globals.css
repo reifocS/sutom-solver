@@ -34,13 +34,14 @@ nav {
 }
 
 .controls button {
-  border: none;
   padding: 15px 32px;
   text-align: center;
   text-decoration: none;
   display: inline-block;
   font-size: 16px;
   cursor: pointer;
+  background-color: black;
+  color: #fff;
 }
 
 .ListItemEven,
@@ -93,17 +94,21 @@ nav {
   min-width: 45px;
   font-family: monospace;
 }
+.reset {
+  padding: 10px !important;
+}
 
 .spoilers {
-  border: none;
-  padding: 10px 22px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  cursor: pointer;
-  user-select: none;
+  background: none;
+	color: inherit;
+	border: none;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+	outline: inherit;
   margin-bottom: 5px;
+  color: #fff;
+  font-size: 1.5rem;
 }
 
 .openers {

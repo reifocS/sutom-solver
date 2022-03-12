@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { FixedSizeList as List } from "react-window";
 import { AiOutlineEnter } from "react-icons/ai";
-import { MdOutlineKeyboardBackspace } from "react-icons/md";
+import { MdOutlineKeyboardBackspace, MdOutlineReplay } from "react-icons/md";
+import { RiEyeCloseLine, RiEyeLine as EyeOpen } from "react-icons/ri";
+
 import {
   getPattern,
   getPossibleWords,
@@ -309,12 +311,13 @@ export default function App({ onlyWords, wordWithFreq }) {
           <p>Play SUTOM using information theory</p>
           <div className="controls">
             <button
+              className="reset"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => {
                 reset();
               }}
             >
-              reset
+              <MdOutlineReplay />
             </button>
           </div>
           <br />
@@ -343,13 +346,12 @@ export default function App({ onlyWords, wordWithFreq }) {
             }}
           >
             <p>Suggested words:</p>
-            {loading && <p>Searching...</p>}
             <button
               onMouseDown={(e) => e.preventDefault()}
               className="spoilers"
               onClick={() => showSpoiler((prev) => !prev)}
             >
-              {`${spoilerOn ? "hide help" : "show help"}`}
+              {spoilerOn ? <RiEyeCloseLine /> : <EyeOpen />}
             </button>
             {spoilerOn && (
               <List
@@ -364,6 +366,7 @@ export default function App({ onlyWords, wordWithFreq }) {
             )}
           </div>
           <Keyboard onKey={handleKey} bestColors={bestColors} />
+          {loading && <p>Searching...</p>}
         </div>
       </div>
     </div>
