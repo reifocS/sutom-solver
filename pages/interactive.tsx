@@ -50,7 +50,6 @@ function Button({ buttonKey, children, onKey, color }: ButtonProps) {
       className="button"
       style={{
         backgroundColor: color ? color : "black",
-        borderColor: "lightgray",
       }}
       onClick={() => {
         onKey(buttonKey);

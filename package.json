@@ -21,13 +21,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "start": "next start",
+    "lint": "next lint"
   },
   "browserslist": {
     "production": [
@@ -42,6 +37,8 @@
     ]
   },
   "devDependencies": {
-    "@types/react-window": "^1.8.5"
+    "@types/react-window": "^1.8.5",
+    "eslint": "^8.11.0",
+    "eslint-config-next": "12.1.0"
   }
 }

@@ -51,10 +51,6 @@ function Button({ buttonKey, children, onKey }: ButtonProps) {
   return (
     <button
       className="button"
-      style={{
-        backgroundColor: "lightgray",
-        borderColor: "lightgray",
-      }}
       onClick={() => {
         onKey(buttonKey);
       }}
@@ -354,8 +350,8 @@ export default function App({ wordWithFreq }) {
             }}
           >
             <small>
-              <code>"y"</code> for wrong place,
-              <code>"g"</code> for good and <code>"n"</code> for not present
+              <code>&quot;y&quot;</code> for wrong place,
+              <code>&quot;g&quot;</code> for good and <code>&quot;n&quot;</code> for not present
             </small>
             <p>Possible words:</p>
             <List
