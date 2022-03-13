@@ -152,7 +152,7 @@ export default function App() {
 
   const WORDLIST = React.useMemo(() => {
     return Object.keys(wordWithFreq);
-  }, [wordWithFreq]);
+  }, []);
 
   function check() {
     if (currentAttempt.length < 5 || patterns.length < length.length) {
@@ -351,7 +351,8 @@ export default function App() {
           >
             <small>
               <code>&quot;y&quot;</code> for wrong place,
-              <code>&quot;g&quot;</code> for good and <code>&quot;n&quot;</code> for not present
+              <code>&quot;g&quot;</code> for good and <code>&quot;n&quot;</code>{" "}
+              for not present
             </small>
             <p>Possible words:</p>
             <List
