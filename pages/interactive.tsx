@@ -271,11 +271,11 @@ export default function App() {
       setCurrentAttempt(firstLetter);
       getPossibilites();
     }
-  }, [firstLetter]);
+  }, [firstLetter, getPossibilites]);
 
   useEffect(() => {
     refetchGameHistory();
-  }, []);
+  }, [refetchGameHistory]);
 
   let wordLength: string[] = [];
   for (let i = 0; i < length; ++i) {

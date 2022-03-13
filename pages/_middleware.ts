@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import wordWithFreq from "../public/withfreq.json";
 import LRU from "lru-cache";
 import {
   getPattern,
@@ -14,21 +13,8 @@ const cache = new LRU({
   ttl: 1000 * 60 * 5,
 });
 
-const onlyWords = Object.keys(wordWithFreq).filter(
-  (mot) =>
-    mot.length >= 6 &&
-    mot.length <= 9 &&
-    (wordWithFreq as any)[mot] > 3.02e-6 &&
-    !mot.includes("!") &&
-    !mot.includes(" ") &&
-    !mot.includes("-") &&
-    !mot.toUpperCase().startsWith("K") &&
-    !mot.toUpperCase().startsWith("Q") &&
-    !mot.toUpperCase().startsWith("W") &&
-    !mot.toUpperCase().startsWith("X") &&
-    !mot.toUpperCase().startsWith("Y") &&
-    !mot.toUpperCase().startsWith("Z")
-);
+let wordWithFreq = null;
+let onlyWords = null;
 
 const ALLWORDS = new Set(Object.keys(wordWithFreq));
 
@@ -74,6 +60,24 @@ export default async function middleware(
   const cookieFromRequest = req.cookies["sutom-solver"];
   const cached = cache.get(cookieFromRequest);
   const wordToGuess = cached?.wordToGuess;
+  if (wordWithFreq === null) {
+    wordWithFreq = await import("../public/withfreq.json");
+    onlyWords = Object.keys(wordWithFreq).filter(
+      (mot) =>
+        mot.length >= 6 &&
+        mot.length <= 9 &&
+        (wordWithFreq as any)[mot] > 3.02e-6 &&
+        !mot.includes("!") &&
+        !mot.includes(" ") &&
+        !mot.includes("-") &&
+        !mot.toUpperCase().startsWith("K") &&
+        !mot.toUpperCase().startsWith("Q") &&
+        !mot.toUpperCase().startsWith("W") &&
+        !mot.toUpperCase().startsWith("X") &&
+        !mot.toUpperCase().startsWith("Y") &&
+        !mot.toUpperCase().startsWith("Z")
+    );
+  }
   if (req.nextUrl.pathname === "/init") {
     if (cookieFromRequest && wordToGuess) {
       return NextResponse.json({
