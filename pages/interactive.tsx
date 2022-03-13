@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FixedSizeList as List } from "react-window";
 import { AiOutlineEnter } from "react-icons/ai";
 import { MdOutlineKeyboardBackspace, MdOutlineReplay } from "react-icons/md";
 import { RiEyeCloseLine, RiEyeLine as EyeOpen } from "react-icons/ri";
-import { wordWithFreq, onlyWords } from "../utils/parseDict";
+import toast, { Toaster } from "react-hot-toast";
 import {
-  getPattern,
-  getPossibleWords,
   PatternArray,
-  withScore,
 } from "../utils/words";
 import Link from "next/link";
+import { useQuery } from "react-query";
+import axios from "axios";
 
 let GREY = 0;
 let RED = 2;
@@ -30,6 +29,23 @@ const colorMapKeyboard = {
   2: "#E7002A",
   [-1]: "",
   undefined: "black",
+};
+
+type ServerErrorResponse = {
+  error: "api_error" | "unknown_word";
+};
+
+type ServerSuccessResponse = {
+  history: {
+    word: string;
+    pattern: PatternArray;
+  }[];
+};
+
+type ServerResponse = ServerErrorResponse & ServerSuccessResponse;
+
+type CheckOptions = {
+  signal?: AbortSignal;
 };
 
 type RowProps = {
@@ -89,7 +105,7 @@ function KeyboardRow({ letters, isLast, onKey, bestColors }: KeyboardRowProps) {
         onKey={onKey}
         key={letter}
         buttonKey={letter}
-        color={colorMapKeyboard[bestColors.get(letter)]}
+        color={colorMapKeyboard[bestColors.get(letter.toUpperCase())]}
       >
         {letter}
       </Button>
@@ -144,6 +160,7 @@ function Cell({ letter, color }: CellProps) {
 }
 
 function Row({ word, length, patterns }: RowProps) {
+  if (!word) return <></>;
   return (
     <div
       style={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}
@@ -161,72 +178,118 @@ type CellProps = {
 };
 
 type StateHistory = Array<{
-  currentAttempt: string;
+  word: string;
   pattern: PatternArray;
 }>;
 
-export default function App() {
-  const length = onlyWords.length;
-  const [wordToGuess, setWordToGuess] = useState(
-    () => onlyWords[Math.floor(Math.random() * length)]
+function useSecretInfo() {
+  return useQuery(
+    "firstLetter",
+    async () => {
+      const { data } = await axios.get(`/init`);
+      return data;
+    },
+    {
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+    }
   );
-  const [loading, setLoading] = useState(false);
-  const [possibleWords, setPossibleWords] = useState<[string, unknown][]>([]);
-  const [history, setHistory] = useState<StateHistory>([]);
-  const [currentAttempt, setCurrentAttempt] = useState(wordToGuess[0]);
+}
+
+function useGameHistory(word: string, id: number) {
+  return useQuery<ServerResponse, string>(
+    ["gamestate", id],
+    async () => {
+      const res = await fetch(
+        `/check?word=${
+          word != null && word.length > 1 ? encodeURIComponent(word) : "$"
+        }`
+      );
+      const json = await res.json();
+      if (json.error) {
+        throw new Error();
+      }
+      return json;
+    },
+    {
+      refetchOnWindowFocus: false,
+      enabled: false,
+      retry: false,
+      onError: () => {
+        toast.error("Invalid word", { id: "toast", duration: 1000 });
+      },
+      onSuccess: (data) => {
+        if (data.history && data.history.length > 0) {
+          const lastRound = data.history[data.history.length - 1];
+          if (lastRound.pattern.every((v) => v === 2)) {
+            toast.success("Congrats!", { id: "toast", duration: 4000 });
+          }
+        }
+      },
+    }
+  );
+}
+
+function usePossibilities(id: number) {
+  return useQuery<{ possibilities: Array<[string, number]> }, string>(
+    ["possibilities", id],
+    async () => {
+      const res = await fetch("possibles");
+      const json = await res.json();
+      if (json.error) {
+        throw new Error();
+      }
+      return json;
+    },
+    {
+      refetchOnWindowFocus: false,
+      enabled: false,
+      retry: false,
+      onError: () => {
+        toast.error("Oops", { id: "toast", duration: 1000 });
+      },
+    }
+  );
+}
+export default function App() {
+  const [currentAttempt, setCurrentAttempt] = useState("");
   const [spoilerOn, showSpoiler] = useState(false);
+  const { data, refetch, status } = useSecretInfo();
+  const [gameId, setGameId] = useState(1);
+  const { data: gameHistory, refetch: refetchGameHistory } = useGameHistory(
+    currentAttempt,
+    gameId
+  );
+  const { data: possibles, refetch: getPossibilites } = usePossibilities(1);
+  const firstLetter = data?.firstLetter;
+  const length = data?.length || 0;
+
+  const history = gameHistory?.history ?? [];
+  const possibilities = possibles?.possibilities ?? [];
+  useEffect(() => {
+    if (firstLetter) {
+      setCurrentAttempt(firstLetter);
+      getPossibilites();
+    }
+  }, [firstLetter]);
+
+  useEffect(() => {
+    refetchGameHistory();
+  }, []);
 
   let wordLength: string[] = [];
-  const ALLWORDS = React.useMemo(() => {
-    return new Set(Object.keys(wordWithFreq));
-  }, [wordWithFreq]);
-  for (let i = 0; i < wordToGuess.length; ++i) {
+  for (let i = 0; i < length; ++i) {
     wordLength.push("");
   }
 
-  useEffect(() => {
-    const firstLetter = wordToGuess[0].toUpperCase();
-    const length = wordToGuess.length;
-    const key = `${firstLetter}-${length}`;
-    (async () => {
-      setLoading(true);
-      const { data } = await import(`../public/precomputed/${key}.json`);
-      setPossibleWords(data);
-      setLoading(false);
-    })();
-  }, [wordToGuess]);
-
-  function check() {
+  async function check() {
     if (currentAttempt.length < wordLength.length) {
       throw new Error("How?");
     }
-
-    if (!ALLWORDS.has(currentAttempt.toUpperCase())) {
-      console.log(onlyWords);
-      alert("Mot non valide");
-      return;
-    }
-
-    let possibles =
-      history.length === 0 ? onlyWords : possibleWords.map((v) => v[0]);
-    const pattern = getPattern(currentAttempt, wordToGuess);
-    const possibilities = getPossibleWords(
-      currentAttempt.toUpperCase(),
-      pattern,
-      possibles
-    );
-    const possibilitiesWithScore = withScore(possibilities, wordWithFreq);
-    setPossibleWords(possibilitiesWithScore);
-    let newHistory = [
-      ...history,
-      {
-        currentAttempt,
-        pattern,
-      },
-    ];
-    setHistory(newHistory);
-    setCurrentAttempt(wordToGuess[0]);
+    await refetchGameHistory();
+    setCurrentAttempt(firstLetter);
     showSpoiler(false);
+    getPossibilites();
   }
 
   async function handleKey(key: string) {
@@ -253,11 +316,10 @@ export default function App() {
     handleKey(e.key);
   }
 
-  function reset() {
-    const word = onlyWords[Math.floor(Math.random() * length)];
-    setWordToGuess(word);
-    setCurrentAttempt(word[0]);
-    setHistory([]);
+  async function reset() {
+    await axios.get("/reset");
+    await refetch();
+    setGameId((prev) => prev + 1);
   }
 
   useEffect(() => {
@@ -266,7 +328,7 @@ export default function App() {
   });
 
   const RowVirtualized = ({ index, style }: { index: number; style: any }) => {
-    const [word, score] = possibleWords[index];
+    const [word, score] = possibilities[index];
     //const niceDisplay = Math.round(+(score as number) * 1000) / 1000;
     return (
       <div className={index % 2 ? "ListItemOdd" : "ListItemEven"} style={style}>
@@ -275,9 +337,10 @@ export default function App() {
     );
   };
 
-  function calculateBestColors(history: StateHistory) {
+  function calculateBestColors(history?: StateHistory) {
+    if (!history) return new Map();
     let map = new Map();
-    for (let { currentAttempt: attempt, pattern } of history) {
+    for (let { word: attempt, pattern } of history) {
       for (let i = 0; i < attempt.length; i++) {
         let color = pattern[i];
         let key = attempt[i];
@@ -300,6 +363,9 @@ export default function App() {
 
   const bestColors = calculateBestColors(history);
 
+  if (status === "loading") {
+    return <p>loading...</p>;
+  }
   return (
     <div>
       <nav>
@@ -321,19 +387,19 @@ export default function App() {
             </button>
           </div>
           <br />
-          {history.map(({ currentAttempt, pattern }, index) => (
+          {history.map(({ word, pattern }, index) => (
             <Row
               key={index}
-              firstLetter={wordToGuess[0]}
-              word={currentAttempt.toUpperCase()}
+              firstLetter={firstLetter}
+              word={word.toUpperCase()}
               length={wordLength}
               patterns={pattern}
             />
           ))}
           <Row
             key={"current"}
-            firstLetter={wordToGuess[0]}
-            word={currentAttempt.toUpperCase()}
+            firstLetter={firstLetter}
+            word={currentAttempt?.toUpperCase()}
             length={wordLength}
             patterns={[]}
           />
@@ -357,7 +423,7 @@ export default function App() {
               <List
                 height={200}
                 className="List"
-                itemCount={possibleWords.length}
+                itemCount={possibilities?.length}
                 itemSize={35}
                 width={300}
               >
@@ -365,10 +431,13 @@ export default function App() {
               </List>
             )}
           </div>
-          <Keyboard onKey={handleKey} bestColors={bestColors} />
-          {loading && <p>Searching...</p>}
         </div>
       </div>
+      <Keyboard onKey={handleKey} bestColors={bestColors} />
+      {/[debug]/.test(location.search) && (
+        <pre>{JSON.stringify(gameHistory, null, 2)}</pre>
+      )}
+      <Toaster />
     </div>
   );
 }
