@@ -186,7 +186,7 @@ function useSecretInfo() {
   return useQuery(
     "firstLetter",
     async () => {
-      const { data } = await axios.get(`/init`);
+      const { data } = await axios.get(`/api/word/init`);
       return data;
     },
     {
@@ -201,7 +201,7 @@ function useGameHistory(word: string, id: number) {
     ["gamestate", id],
     async () => {
       const res = await fetch(
-        `/check?word=${
+        `/api/word/check?word=${
           word != null && word.length > 1 ? encodeURIComponent(word) : "$"
         }`
       );
@@ -234,7 +234,7 @@ function usePossibilities(id: number) {
   return useQuery<{ possibilities: Array<[string, number]> }, string>(
     ["possibilities", id],
     async () => {
-      const res = await fetch("possibles");
+      const res = await fetch("/api/word/possibles");
       const json = await res.json();
       if (json.error) {
         throw new Error();
@@ -317,7 +317,7 @@ export default function App() {
   }
 
   async function reset() {
-    await axios.get("/reset");
+    await axios.get("/api/word/reset");
     await refetch();
     setGameId((prev) => prev + 1);
   }
