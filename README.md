@@ -6,7 +6,8 @@ Inspired by the amazing [3blue1brown video's](https://www.youtube.com/watch?v=v6
 
 ## how to use
 Find the best opening for the letter of the day.  
-Fill in the grid with the word of your choice, enter the answer on sutom and fill in the correct colours in the solver, check proposed solutions and start again.
+Fill in the grid with the word of your choice, enter the answer on sutom and fill in the correct colours in the solver, check proposed solutions and start again.  
+You can also try the interactive solver [here](https://sutom-solver.vercel.app/interactive).
 
 ## area of improvement
 There is certainly a way to improve the speed of the code because there are plenty of nested loops!  
