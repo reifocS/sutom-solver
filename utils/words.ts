@@ -144,10 +144,11 @@ function patternToBase3(pattern: PatternArray) {
 
 const cache: Record<string, [string, unknown][]> = {};
 
-export function withScore(possibleWords, wordWithFreq, key?: string) {
-  if (key && cache[key]) {
-    return cache[key];
-  }
+export function withScore(
+  possibleWords: Array<string>,
+  wordWithFreq,
+  key?: string
+): Array<[string, number]> {
   const obj: Record<string, any> = {};
   //const patterns = getAllPatterns(size);
   const nbOfWords = possibleWords.length;
@@ -156,7 +157,7 @@ export function withScore(possibleWords, wordWithFreq, key?: string) {
     // the possible patterns of this word with nb of occurences
     obj[source] = {};
     for (const target of possibleWords) {
-      if(wordWithFreq[target] < 3.02e-7) {
+      if (wordWithFreq[target] < 3.02e-7) {
         continue;
       }
       const pattern = getPattern(source, target);
@@ -186,13 +187,10 @@ export function withScore(possibleWords, wordWithFreq, key?: string) {
   if (key) {
     cache[key] = inOrder;
   }
-  return inOrder;
+  return inOrder as Array<[string, number]>;
 }
 
-export const withScorePromise = (
-  possibleWords,
-  key?: string
-) =>
+export const withScorePromise = (possibleWords, key?: string) =>
   new Promise<[string, unknown][]>((resolve) =>
     setTimeout(() => resolve(withScore(possibleWords, key)), 1)
   );
