@@ -38,6 +38,7 @@ type RowProps = {
   pattern: PatternArray;
   firstLetter: string;
   solved: boolean;
+  foundIndex?: Map<number, string>;
 };
 
 type ButtonProps = {
@@ -131,11 +132,17 @@ function Keyboard({ onKey, bestColors }: KeyboardProps) {
   );
 }
 
-function Cell({ letter, color, index, solved }: CellProps) {
+function Cell({ letter, color, index, solved, foundIndex }: CellProps) {
   const bgColor = colorMap[color];
   let content;
+  let displayFound = false;
+  if (foundIndex && foundIndex.has(index)) {
+    displayFound = true;
+  }
   if (letter) {
     content = letter;
+  } else if (displayFound) {
+    content = foundIndex.get(index);
   } else {
     content = <div style={{ opacity: 0 }}>X</div>;
   }
@@ -172,10 +179,9 @@ function Cell({ letter, color, index, solved }: CellProps) {
   );
 }
 
-function Row({ word, length, pattern, solved }: RowProps) {
+function Row({ word, length, pattern, solved, foundIndex }: RowProps) {
   return (
-    <div
-    >
+    <div>
       {length.map((_, i) => {
         return (
           <Cell
@@ -184,6 +190,7 @@ function Row({ word, length, pattern, solved }: RowProps) {
             color={pattern[i]}
             solved={solved}
             index={i}
+            foundIndex={foundIndex}
           />
         );
       })}
@@ -196,6 +203,7 @@ type CellProps = {
   color?: 0 | 1 | 2;
   index: number;
   solved: boolean;
+  foundIndex?: Map<number, string>;
 };
 
 type StateHistory = Array<Attempt>;
@@ -211,6 +219,7 @@ type GridProps = {
   firstLetter: string;
   wordLength: any[];
   gameId: number;
+  foundIndex: Map<number, string>;
 };
 
 function Grid({
@@ -219,6 +228,7 @@ function Grid({
   firstLetter,
   wordLength,
   gameId,
+  foundIndex,
 }: GridProps) {
   let rows = [];
   for (let i = 0; i < 6; i++) {
@@ -241,6 +251,7 @@ function Grid({
           word={currentAttempt.toUpperCase()}
           length={wordLength}
           solved={false}
+          foundIndex={foundIndex}
           pattern={[]}
         />
       );
@@ -271,6 +282,7 @@ export default function App() {
   const [currentAttempt, setCurrentAttempt] = useState(wordToGuess[0]);
   const [spoilerOn, showSpoiler] = useState(false);
   const [gameId, setGameId] = useState(() => new Date().getTime());
+  const [tamponFirst, setTamponFirst] = useState(true);
 
   let wordLength: string[] = [];
   const ALLWORDS = React.useMemo(() => {
@@ -281,7 +293,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    const firstLetter = wordToGuess[0].toUpperCase();
+    const firstLetter = wordToGuess[0];
     const length = wordToGuess.length;
     const key = `${firstLetter}-${length}`;
     (async () => {
@@ -298,7 +310,6 @@ export default function App() {
     }
 
     if (!ALLWORDS.has(currentAttempt.toUpperCase())) {
-      console.log(onlyWords);
       alert("Mot non valide");
       return;
     }
@@ -323,6 +334,7 @@ export default function App() {
     setHistory(newHistory);
     setCurrentAttempt(wordToGuess[0]);
     showSpoiler(false);
+    setTamponFirst(true);
   }
 
   async function handleKey(key: string) {
@@ -336,6 +348,14 @@ export default function App() {
       if (currentAttempt.length === 1) return;
       setCurrentAttempt(currentAttempt.slice(0, currentAttempt.length - 1));
     } else if (/^[a-z]$/.test(letter)) {
+      if (
+        currentAttempt.length === 1 &&
+        letter.toUpperCase() === wordToGuess[0].toUpperCase() &&
+        tamponFirst
+      ) {
+        setTamponFirst(false);
+        return;
+      }
       if (currentAttempt.length < wordLength.length) {
         setCurrentAttempt(currentAttempt + letter);
       }
@@ -354,6 +374,7 @@ export default function App() {
     setWordToGuess(word);
     setCurrentAttempt(word[0]);
     setHistory([]);
+    setTamponFirst(true);
     setGameId(new Date().getTime());
   }
 
@@ -379,10 +400,24 @@ export default function App() {
         let color = pattern[i];
         let key = attempt[i];
         let bestColor = map.get(key);
-        map.set(key, getBetterColor(color, bestColor));
+        map.set(key.toLowerCase(), getBetterColor(color, bestColor));
       }
     }
+
     return map;
+  }
+
+  function calculateFoundIndex(history: StateHistory): Map<number, string> {
+    const found = new Map<number, string>();
+    for (let { currentAttempt: attempt, pattern } of history) {
+      for (let i = 0; i < attempt.length; i++) {
+        let key = pattern[i];
+        if (key === 2) {
+          found.set(i, attempt[i]);
+        }
+      }
+    }
+    return found;
   }
 
   function getBetterColor(a, b) {
@@ -395,6 +430,7 @@ export default function App() {
     return GREY;
   }
 
+  const foundIndex = calculateFoundIndex(history);
   const bestColors = calculateBestColors(history);
 
   return (
@@ -420,6 +456,7 @@ export default function App() {
           <br />
           <Grid
             history={history}
+            foundIndex={foundIndex}
             currentAttempt={currentAttempt}
             firstLetter={wordToGuess[0]}
             wordLength={wordLength}
