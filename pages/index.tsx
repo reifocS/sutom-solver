@@ -15,7 +15,7 @@ const colorMap = {
   0: "#0077C7",
   1: "#FFBD00",
   2: "#E7002A",
-  [-1]: "",
+  [-1]: "#667",
 };
 
 type ProgressBarProps = {

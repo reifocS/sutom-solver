@@ -35,8 +35,9 @@ const colorMapKeyboard = {
 type RowProps = {
   word: string;
   length: Array<any>;
-  patterns: PatternArray;
+  pattern: PatternArray;
   firstLetter: string;
+  solved: boolean;
 };
 
 type ButtonProps = {
@@ -130,26 +131,61 @@ function Keyboard({ onKey, bestColors }: KeyboardProps) {
   );
 }
 
-function Cell({ letter, color }: CellProps) {
+function Cell({ letter, color, index, solved }: CellProps) {
+  const bgColor = colorMap[color];
+  let content;
+  if (letter) {
+    content = letter;
+  } else {
+    content = <div style={{ opacity: 0 }}>X</div>;
+  }
   return (
     <div
-      className="cell"
-      style={{
-        backgroundColor: colorMap[color ?? -1],
-      }}
+      className={"cell" + (solved ? " solved" : "") + (letter ? " filled" : "")}
     >
-      {letter}
+      <div
+        className="surface"
+        style={{
+          transitionDelay: index * 100 + "ms",
+        }}
+      >
+        <div
+          className="front"
+          style={{
+            backgroundColor: "black",
+            borderColor: letter ? "#667" : "",
+          }}
+        >
+          {content}
+        </div>
+        <div
+          className="back"
+          style={{
+            backgroundColor: bgColor,
+            borderColor: bgColor,
+          }}
+        >
+          {content}
+        </div>
+      </div>
     </div>
   );
 }
 
-function Row({ word, length, patterns }: RowProps) {
+function Row({ word, length, pattern, solved }: RowProps) {
   return (
     <div
-      style={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}
     >
       {length.map((_, i) => {
-        return <Cell key={i} letter={word[i]} color={patterns[i]} />;
+        return (
+          <Cell
+            key={i}
+            letter={word[i]}
+            color={pattern[i]}
+            solved={solved}
+            index={i}
+          />
+        );
       })}
     </div>
   );
@@ -158,12 +194,71 @@ function Row({ word, length, patterns }: RowProps) {
 type CellProps = {
   letter?: string;
   color?: 0 | 1 | 2;
+  index: number;
+  solved: boolean;
 };
 
-type StateHistory = Array<{
+type StateHistory = Array<Attempt>;
+
+type Attempt = {
   currentAttempt: string;
   pattern: PatternArray;
-}>;
+};
+
+type GridProps = {
+  history: StateHistory;
+  currentAttempt: string;
+  firstLetter: string;
+  wordLength: any[];
+  gameId: number;
+};
+
+function Grid({
+  history,
+  currentAttempt,
+  firstLetter,
+  wordLength,
+  gameId,
+}: GridProps) {
+  let rows = [];
+  for (let i = 0; i < 6; i++) {
+    if (i < history.length) {
+      rows.push(
+        <Row
+          key={`${gameId}-${i}`}
+          pattern={history[i].pattern}
+          word={history[i].currentAttempt}
+          solved={true}
+          length={wordLength}
+          firstLetter={firstLetter}
+        />
+      );
+    } else if (i === history.length) {
+      rows.push(
+        <Row
+          key={`${gameId}-${i}`}
+          firstLetter={firstLetter}
+          word={currentAttempt.toUpperCase()}
+          length={wordLength}
+          solved={false}
+          pattern={[]}
+        />
+      );
+    } else {
+      rows.push(
+        <Row
+          key={`${gameId}-${i}`}
+          firstLetter={firstLetter}
+          word={firstLetter}
+          length={wordLength}
+          solved={false}
+          pattern={[]}
+        />
+      );
+    }
+  }
+  return <div id="grid">{rows}</div>;
+}
 
 export default function App() {
   const length = onlyWords.length;
@@ -175,6 +270,7 @@ export default function App() {
   const [history, setHistory] = useState<StateHistory>([]);
   const [currentAttempt, setCurrentAttempt] = useState(wordToGuess[0]);
   const [spoilerOn, showSpoiler] = useState(false);
+  const [gameId, setGameId] = useState(() => new Date().getTime());
 
   let wordLength: string[] = [];
   const ALLWORDS = React.useMemo(() => {
@@ -258,6 +354,7 @@ export default function App() {
     setWordToGuess(word);
     setCurrentAttempt(word[0]);
     setHistory([]);
+    setGameId(new Date().getTime());
   }
 
   useEffect(() => {
@@ -321,22 +418,14 @@ export default function App() {
             </button>
           </div>
           <br />
-          {history.map(({ currentAttempt, pattern }, index) => (
-            <Row
-              key={index}
-              firstLetter={wordToGuess[0]}
-              word={currentAttempt.toUpperCase()}
-              length={wordLength}
-              patterns={pattern}
-            />
-          ))}
-          <Row
-            key={"current"}
+          <Grid
+            history={history}
+            currentAttempt={currentAttempt}
             firstLetter={wordToGuess[0]}
-            word={currentAttempt.toUpperCase()}
-            length={wordLength}
-            patterns={[]}
+            wordLength={wordLength}
+            gameId={gameId}
           />
+
           <div
             style={{
               display: "flex",
