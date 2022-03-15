@@ -187,7 +187,7 @@ export default function App() {
   }
 
   async function bestFirstGuess(letter: string, length: number) {
-    const possibilitiesWithoutScore = WORDLIST.filter(
+    /*const possibilitiesWithoutScore = WORDLIST.filter(
       (m) => m.startsWith(letter.toUpperCase()) && m.length === length
     );
 
@@ -195,7 +195,10 @@ export default function App() {
       setOpeners,
       possibilitiesWithoutScore,
       (status: string) => setLoading(status)
-    );
+    );*/
+    const key = `${letter.toUpperCase()}-${length}`;
+    const { data } = await import(`../public/precomputed/${key}.json`);
+    setOpeners(data);
   }
 
   async function handleKey(key: string) {
